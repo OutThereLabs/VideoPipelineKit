@@ -1,0 +1,11 @@
+use_frameworks!
+
+target 'VideoPipelineKit_Example' do
+  pod 'VideoPipelineKit', :path => '../'
+
+  target 'VideoPipelineKit_Tests' do
+    inherit! :search_paths
+
+    
+  end
+end
