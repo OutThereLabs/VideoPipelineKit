@@ -9,34 +9,22 @@
 Pod::Spec.new do |s|
   s.name             = 'VideoPipelineKit'
   s.version          = '0.1.0'
-  s.summary          = 'A short description of VideoPipelineKit.'
-
-# This description is used to generate tags and improve search results.
-#   * Think: What does it do? Why did you write it? What is the focus?
-#   * Try to keep it short, snappy and to the point.
-#   * Write the description between the DESC delimiters below.
-#   * Finally, don't worry about the indent, CocoaPods strips it!
+  s.summary          = 'A SnapChat like video pipeline for rendering filters.'
 
   s.description      = <<-DESC
-TODO: Add long description of the pod here.
+This framework builds a SnapChat like video pipeline for rendering filters.
                        DESC
 
-  s.homepage         = 'https://github.com/pat2man/VideoPipelineKit'
-  # s.screenshots     = 'www.example.com/screenshots_1', 'www.example.com/screenshots_2'
+  s.homepage         = 'https://github.com/OutThereLabs/VideoPipelineKit'
   s.license          = { :type => 'MIT', :file => 'LICENSE' }
   s.author           = { 'pat2man' => 'pat2man@gmail.com' }
   s.source           = { :git => 'https://github.com/pat2man/VideoPipelineKit.git', :tag => s.version.to_s }
-  # s.social_media_url = 'https://twitter.com/<TWITTER_USERNAME>'
+  s.social_media_url = 'https://twitter.com/pat2man'
 
-  s.ios.deployment_target = '8.0'
+  s.ios.deployment_target = '10.0'
 
   s.source_files = 'VideoPipelineKit/Classes/**/*'
-  
-  # s.resource_bundles = {
-  #   'VideoPipelineKit' => ['VideoPipelineKit/Assets/*.png']
-  # }
 
-  # s.public_header_files = 'Pod/Classes/**/*.h'
-  # s.frameworks = 'UIKit', 'MapKit'
-  # s.dependency 'AFNetworking', '~> 2.3'
+  s.public_header_files = 'Pod/Classes/**/*.h'
+  s.frameworks = 'Metal', 'QuartzCore', 'AVFoundation', 'UIKit'
 end

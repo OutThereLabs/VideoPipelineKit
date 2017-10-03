@@ -1,25 +1,127 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="6211" systemVersion="14A298i" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" initialViewController="vXZ-lx-hvc">
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="13196" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES" initialViewController="Fy7-q8-AJM">
+    <device id="retina5_5" orientation="portrait">
+        <adaptation id="fullscreen"/>
+    </device>
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="6204"/>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="13173"/>
+        <capability name="Constraints to layout margins" minToolsVersion="6.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <scenes>
-        <!--View Controller-->
+        <!--Recording View Controller-->
         <scene sceneID="ufC-wZ-h7g">
             <objects>
-                <viewController id="vXZ-lx-hvc" customClass="ViewController" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController id="vXZ-lx-hvc" customClass="RecordingViewController" customModule="VideoPipelineKit_Example" customModuleProvider="target" sceneMemberID="viewController">
                     <layoutGuides>
                         <viewControllerLayoutGuide type="top" id="jyV-Pf-zRb"/>
                         <viewControllerLayoutGuide type="bottom" id="2fi-mo-0CV"/>
                     </layoutGuides>
                     <view key="view" contentMode="scaleToFill" id="kh9-bI-dsS">
-                        <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
+                        <rect key="frame" x="0.0" y="0.0" width="414" height="736"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                        <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
+                        <subviews>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="bwz-Qn-sKk">
+                                <rect key="frame" x="0.0" y="0.0" width="414" height="736"/>
+                                <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                            </view>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="ivP-NE-sya">
+                                <rect key="frame" x="172.66666666666666" y="615" width="69" height="89"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="64"/>
+                                <state key="normal" title="⚪️">
+                                    <color key="titleColor" red="0.81633758540000001" green="0.30590131879999999" blue="0.31374013420000002" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
+                                </state>
+                                <state key="highlighted" title="🔴"/>
+                                <connections>
+                                    <action selector="startRecording:" destination="vXZ-lx-hvc" eventType="touchDown" id="kjR-qL-n3a"/>
+                                    <action selector="stopRecording:" destination="vXZ-lx-hvc" eventType="touchUpInside" id="8aQ-bd-EsC"/>
+                                    <action selector="stopRecording:" destination="vXZ-lx-hvc" eventType="touchUpOutside" id="gBy-Qk-PU2"/>
+                                </connections>
+                            </button>
+                        </subviews>
+                        <color key="backgroundColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                        <constraints>
+                            <constraint firstAttribute="trailing" secondItem="bwz-Qn-sKk" secondAttribute="trailing" id="5Gh-2u-uo4"/>
+                            <constraint firstItem="bwz-Qn-sKk" firstAttribute="top" secondItem="kh9-bI-dsS" secondAttribute="top" id="GF8-2w-fdD"/>
+                            <constraint firstItem="ivP-NE-sya" firstAttribute="centerX" secondItem="kh9-bI-dsS" secondAttribute="centerX" id="M7r-B7-pCp"/>
+                            <constraint firstItem="2fi-mo-0CV" firstAttribute="top" secondItem="ivP-NE-sya" secondAttribute="bottom" constant="32" id="u9g-yQ-WHU"/>
+                            <constraint firstItem="2fi-mo-0CV" firstAttribute="top" secondItem="bwz-Qn-sKk" secondAttribute="bottom" id="uw6-6i-AdD"/>
+                            <constraint firstItem="bwz-Qn-sKk" firstAttribute="leading" secondItem="kh9-bI-dsS" secondAttribute="leading" id="yhC-07-euS"/>
+                        </constraints>
                     </view>
+                    <navigationItem key="navigationItem" id="qP5-xa-emV"/>
+                    <connections>
+                        <outlet property="cameraView" destination="bwz-Qn-sKk" id="2J4-GS-OeQ"/>
+                        <segue destination="7GV-Jy-hQT" kind="show" identifier="Edit Media" id="KPw-hg-kjh"/>
+                    </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="x5A-6p-PRh" sceneMemberID="firstResponder"/>
             </objects>
+            <point key="canvasLocation" x="244" y="31.03448275862069"/>
+        </scene>
+        <!--Media Editing View Controller-->
+        <scene sceneID="GPD-sF-b6y">
+            <objects>
+                <viewController automaticallyAdjustsScrollViewInsets="NO" id="7GV-Jy-hQT" customClass="MediaEditingViewController" customModule="VideoPipelineKit_Example" customModuleProvider="target" sceneMemberID="viewController">
+                    <layoutGuides>
+                        <viewControllerLayoutGuide type="top" id="eLk-Tp-Bxr"/>
+                        <viewControllerLayoutGuide type="bottom" id="ymV-3f-Dis"/>
+                    </layoutGuides>
+                    <view key="view" contentMode="scaleToFill" id="C6y-5M-n8b">
+                        <rect key="frame" x="0.0" y="0.0" width="414" height="736"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="shK-6p-mwI" customClass="FilterScrollView" customModule="VideoPipelineKit">
+                                <rect key="frame" x="0.0" y="0.0" width="414" height="736"/>
+                            </view>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="WIM-Jp-PpE">
+                                <rect key="frame" x="20" y="20" width="33" height="51"/>
+                                <fontDescription key="fontDescription" type="system" weight="black" pointSize="32"/>
+                                <state key="normal" title="╳">
+                                    <color key="titleColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                </state>
+                                <connections>
+                                    <segue destination="yUe-Jy-QFE" kind="unwind" unwindAction="cancelEditing:" id="vFq-aq-nln"/>
+                                </connections>
+                            </button>
+                        </subviews>
+                        <color key="backgroundColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                        <constraints>
+                            <constraint firstAttribute="trailing" secondItem="shK-6p-mwI" secondAttribute="trailing" id="4gG-sX-ZCa"/>
+                            <constraint firstItem="shK-6p-mwI" firstAttribute="leading" secondItem="C6y-5M-n8b" secondAttribute="leading" id="6X9-ns-CSr"/>
+                            <constraint firstItem="ymV-3f-Dis" firstAttribute="top" secondItem="shK-6p-mwI" secondAttribute="bottom" id="8bl-1W-a7J"/>
+                            <constraint firstItem="WIM-Jp-PpE" firstAttribute="top" secondItem="eLk-Tp-Bxr" secondAttribute="bottom" id="9pX-mm-dTV"/>
+                            <constraint firstItem="WIM-Jp-PpE" firstAttribute="leading" secondItem="C6y-5M-n8b" secondAttribute="leadingMargin" id="BRP-Ki-wUv"/>
+                            <constraint firstItem="shK-6p-mwI" firstAttribute="top" secondItem="C6y-5M-n8b" secondAttribute="top" id="quv-Hm-tfn"/>
+                            <constraint firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="WIM-Jp-PpE" secondAttribute="trailing" constant="10" id="yTM-4M-MMo"/>
+                        </constraints>
+                    </view>
+                    <connections>
+                        <outlet property="filterScrollView" destination="shK-6p-mwI" id="uZD-8v-asp"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="Mhq-ig-asE" userLabel="First Responder" sceneMemberID="firstResponder"/>
+                <exit id="yUe-Jy-QFE" userLabel="Exit" sceneMemberID="exit"/>
+            </objects>
+            <point key="canvasLocation" x="1045.5999999999999" y="31.934032983508249"/>
+        </scene>
+        <!--Navigation Controller-->
+        <scene sceneID="PEe-Yd-bcc">
+            <objects>
+                <navigationController automaticallyAdjustsScrollViewInsets="NO" navigationBarHidden="YES" id="Fy7-q8-AJM" sceneMemberID="viewController">
+                    <toolbarItems/>
+                    <navigationBar key="navigationBar" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" id="HKi-KN-eas">
+                        <autoresizingMask key="autoresizingMask"/>
+                    </navigationBar>
+                    <nil name="viewControllers"/>
+                    <connections>
+                        <segue destination="vXZ-lx-hvc" kind="relationship" relationship="rootViewController" id="HMj-rj-jGI"/>
+                    </connections>
+                </navigationController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="cPJ-5z-Iyr" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="-583" y="32"/>
         </scene>
     </scenes>
 </document>
