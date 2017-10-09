@@ -9,6 +9,16 @@ import UIKit
 import Metal
 import QuartzCore
 
+public class RenderPipelineMetalView: UIView {
+    override public static var layerClass: AnyClass {
+        return RenderPipelineMetalLayer.self
+    }
+
+    public override var layer: RenderPipelineMetalLayer {
+        return super.layer as! RenderPipelineMetalLayer
+    }
+}
+
 public class RenderPipelineMetalLayer: CAMetalLayer, RenderPipelineOutput {
     public var underlyingContext: MTLDevice? {
         return device
@@ -30,32 +40,30 @@ public class RenderPipelineMetalLayer: CAMetalLayer, RenderPipelineOutput {
         return nil
     }
 
-    let dispatchSemaphore = DispatchSemaphore(value: 1)
+    let dispatchSemaphore = DispatchSemaphore(value: 3)
 
     public func render(image: CIImage, context: CIContext) {
         guard let commandQueue = commandQueue else { return }
 
-        guard let drawable = nextDrawable() else {
-            return
-        }
-
-        let waitTime = dispatchSemaphore.wait(timeout: DispatchTime.now())
-        if waitTime != .success {
-            return
-        }
-
         autoreleasepool {
-            let commandCompletionSemaphore = dispatchSemaphore
+            guard let drawable = nextDrawable() else {
+                return
+            }
+
+            let waitTime = dispatchSemaphore.wait(timeout: DispatchTime.now())
+            if waitTime != .success {
+                return
+            }
 
             let commandBuffer = commandQueue.makeCommandBuffer()
 
+            let commandCompletionSemaphore = dispatchSemaphore
             commandBuffer.addCompletedHandler{ _ in
                 commandCompletionSemaphore.signal()
             }
 
-            let texture = drawable.texture
             let scaledImage = image.applying(CGAffineTransform.aspectFill(from: image.extent, to: CGRect(origin: CGPoint.zero, size: drawableSize)))
-            context.render(scaledImage, to: texture, commandBuffer: commandBuffer, bounds: scaledImage.extent, colorSpace: CGColorSpaceCreateDeviceRGB())
+            context.render(scaledImage, to: drawable.texture, commandBuffer: commandBuffer, bounds: scaledImage.extent, colorSpace: CGColorSpaceCreateDeviceRGB())
             commandBuffer.present(drawable)
             commandBuffer.commit()
         }

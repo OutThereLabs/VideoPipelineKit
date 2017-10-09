@@ -18,7 +18,7 @@ public extension AVMutableVideoComposition {
             if assetTrack.mediaType == AVMediaTypeVideo {
                 let cropInstruction = self.cropInstruction(for: assetTrack, croppedTo: cropRectangle, duration: assetTrack.timeRange.duration)
                 instructions.append(cropInstruction)
-                frameDuration = max(CMTime(seconds: Double(1 / assetTrack.nominalFrameRate), preferredTimescale: 600), frameDuration)
+                frameDuration = min(CMTime(seconds: Double(1 / assetTrack.nominalFrameRate), preferredTimescale: 600), frameDuration)
             }
         }
     }

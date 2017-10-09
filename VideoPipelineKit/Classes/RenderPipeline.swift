@@ -21,7 +21,9 @@ public class RenderPipeline: NSObject {
         case metal(device: MTLDevice)
     }
 
-    let config: Config
+    var pixelBufferPixelFormatType = kCVPixelFormatType_420YpCbCr8BiPlanarFullRange
+
+    public let config: Config
     public let imageContext: CIContext
 
     public init(config: Config) {

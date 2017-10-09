@@ -54,11 +54,7 @@ public class RenderPipelineCompositor: NSObject, AVVideoCompositing {
         return CIContext()
     }()
 
-    var pixelBufferPixelFormatType = kCVPixelFormatType_32BGRA
-
-    public override init() {
-        super.init()
-    }
+    var pixelBufferPixelFormatType = kCVPixelFormatType_420YpCbCr8BiPlanarFullRange
 
     public var sourcePixelBufferAttributes: [String : Any]? {
         return [kCVPixelBufferPixelFormatTypeKey as String: pixelBufferPixelFormatType]
@@ -73,6 +69,8 @@ public class RenderPipelineCompositor: NSObject, AVVideoCompositing {
     }
 
     public func startRequest(_ asyncVideoCompositionRequest: AVAsynchronousVideoCompositionRequest) {
+        let startedAt = Date()
+
         guard asyncVideoCompositionRequest.sourceTrackIDs.count > 0 else {
             let error = NSError(domain: "com.outtherelabs.video", code: 500, userInfo: [NSLocalizedDescriptionKey: "No source track IDs"])
             asyncVideoCompositionRequest.finish(with: error)
@@ -81,6 +79,12 @@ public class RenderPipelineCompositor: NSObject, AVVideoCompositing {
 
         guard let videoCompositionInstruction = asyncVideoCompositionRequest.videoCompositionInstruction as? AVVideoCompositionInstruction else {
             let error = NSError(domain: "com.outtherelabs.video", code: 500, userInfo: [NSLocalizedDescriptionKey: "Can't render instruction: \(asyncVideoCompositionRequest.videoCompositionInstruction), unknown instruction type"])
+            asyncVideoCompositionRequest.finish(with: error)
+            return
+        }
+
+        guard let pixelBuffer = asyncVideoCompositionRequest.renderContext.newPixelBuffer() else {
+            let error = NSError(domain: "com.outtherelabs.video", code: 500, userInfo: [NSLocalizedDescriptionKey: "Could not render video frame"])
             asyncVideoCompositionRequest.finish(with: error)
             return
         }
@@ -118,15 +122,11 @@ public class RenderPipelineCompositor: NSObject, AVVideoCompositing {
             return postTransformCroppedImage.compositingOverImage(composedImage)
         })
 
-        let transformedImage = composedImage.applying(asyncVideoCompositionRequest.renderContext.renderTransform).applyingOrientation(4)
-
-        guard let pixelBuffer = asyncVideoCompositionRequest.renderContext.newPixelBuffer() else {
-            let error = NSError(domain: "com.outtherelabs.video", code: 500, userInfo: [NSLocalizedDescriptionKey: "Could not render video frame"])
-            asyncVideoCompositionRequest.finish(with: error)
-            return
-        }
+        let transformedImage = composedImage.applying(asyncVideoCompositionRequest.renderContext.renderTransform)
 
         imageContext.render(transformedImage, to: pixelBuffer)
         asyncVideoCompositionRequest.finish(withComposedVideoFrame: pixelBuffer)
+        let duration = Date().timeIntervalSince(startedAt)
+        print("Rendered a frame in \(duration) seconds")
     }
 }
