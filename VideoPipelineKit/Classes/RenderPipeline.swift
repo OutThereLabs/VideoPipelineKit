@@ -19,6 +19,11 @@ public protocol RenderPipelineListener {
 public class RenderPipeline: NSObject {
     public enum Config {
         case metal(device: MTLDevice)
+
+        public static var defaultConfig: Config {
+            let device = MTLCreateSystemDefaultDevice()!
+            return .metal(device: device)
+        }
     }
 
     var pixelBufferPixelFormatType = kCVPixelFormatType_420YpCbCr8BiPlanarFullRange
@@ -26,13 +31,52 @@ public class RenderPipeline: NSObject {
     public let config: Config
     public let imageContext: CIContext
 
-    public init(config: Config) {
+    public init(config: Config, size: CGSize) {
         self.config = config
+        self.size = size
 
         switch config {
         case .metal(let device):
             self.imageContext = CIContext(mtlDevice: device)
         }
+    }
+
+    public var size: CGSize {
+        didSet {
+            if size != oldValue {
+                cachedScaledOverlay = nil
+            }
+        }
+    }
+
+    // MARK: - Overlay
+
+    public var overlay: UIImage? {
+        didSet {
+            if overlay != oldValue {
+                cachedScaledOverlay = nil
+            }
+        }
+    }
+
+    private var cachedScaledOverlay: CIImage?
+
+    var scaledOverlay: CIImage? {
+        if let cachedScaledOverlay = cachedScaledOverlay {
+            return cachedScaledOverlay
+        }
+
+        guard let overlay = overlay?.cgImage else {
+            return nil
+        }
+
+        let fullSizeRect = CGRect(origin: CGPoint.zero, size: size)
+
+        let overlayCIImage = CIImage(cgImage: overlay)
+        let overlayScaleTransform = CGAffineTransform.aspectFill(from: overlayCIImage.extent, to: fullSizeRect)
+        let scaledOverlay = overlayCIImage.applying(overlayScaleTransform)
+        self.cachedScaledOverlay = scaledOverlay
+        return scaledOverlay
     }
 
     // MARK: - Pipeline
@@ -50,13 +94,45 @@ public class RenderPipeline: NSObject {
         }
     }
 
-    public var size = CGSize(width: 1920, height: 1080)
+    public func process(image: UIImage) throws -> UIImage {
+        guard let inputImage = CIImage(image: image) else {
+            throw NSError(domain: "com.outtherelabs.videopipelinekit", code: 500, userInfo: [NSLocalizedDescriptionKey: "Could not process image"])
+        }
 
-    public func render(image: CIImage) {
+        let renderedImage = self.rendererdImage(image: inputImage)
+
+        return UIImage(ciImage: renderedImage)
+    }
+
+    public func render(uiImage image: UIImage) throws {
+        guard let inputImage = CIImage(image: image) else {
+            throw NSError(domain: "com.outtherelabs.videopipelinekit", code: 500, userInfo: [NSLocalizedDescriptionKey: "Could not process image"])
+        }
+
+        render(ciImage: inputImage)
+    }
+
+    let renderSemaphore = DispatchSemaphore(value: 1)
+
+    public func render(ciImage image: CIImage) {
+        if renderSemaphore.wait(timeout: DispatchTime.now()) == .timedOut {
+            return
+        }
+
+        defer {
+            renderSemaphore.signal()
+        }
+
         let preferredSize = CGRect(origin: CGPoint.zero, size: size)
         let scaleTransform = CGAffineTransform.aspectFill(from: image.extent, to: preferredSize)
         let scaledImage = image.applying(scaleTransform)
-        let renderedImage = rendererdImage(image: scaledImage)
+
+        var renderedImage = rendererdImage(image: scaledImage)
+
+        if let scaledOverlay = scaledOverlay {
+            renderedImage = scaledOverlay.compositingOverImage(renderedImage)
+        }
+
         forwardToOutputs(image: renderedImage)
     }
 
@@ -72,25 +148,6 @@ public class RenderPipeline: NSObject {
 
     public func add(output: RenderPipelineOutput) {
         outputs.append(output)
-    }
-}
-
-extension UIDevice {
-    func imagePropertyOrientation(from value: UIDeviceOrientation) -> CGImagePropertyOrientation {
-        switch (value) {
-        case .portrait:
-            return .right
-        case .landscapeLeft:
-            return .down
-        case .landscapeRight:
-            return .up
-        default:
-            return .left
-        }
-    }
-
-    var imagePropertyOrientation: CGImagePropertyOrientation {
-        return imagePropertyOrientation(from: orientation)
     }
 }
 

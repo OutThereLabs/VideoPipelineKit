@@ -40,7 +40,16 @@ public class RenderPipelineMetalLayer: CAMetalLayer, RenderPipelineOutput {
         return nil
     }
 
-    let dispatchSemaphore = DispatchSemaphore(value: 3)
+    public override var device: MTLDevice? {
+        get {
+            return super.device
+        }
+
+        set {
+            cachedCommandQueue = nil
+            super.device = device
+        }
+    }
 
     public func render(image: CIImage, context: CIContext) {
         guard let commandQueue = commandQueue else { return }
@@ -50,17 +59,7 @@ public class RenderPipelineMetalLayer: CAMetalLayer, RenderPipelineOutput {
                 return
             }
 
-            let waitTime = dispatchSemaphore.wait(timeout: DispatchTime.now())
-            if waitTime != .success {
-                return
-            }
-
             let commandBuffer = commandQueue.makeCommandBuffer()
-
-            let commandCompletionSemaphore = dispatchSemaphore
-            commandBuffer.addCompletedHandler{ _ in
-                commandCompletionSemaphore.signal()
-            }
 
             let scaledImage = image.applying(CGAffineTransform.aspectFill(from: image.extent, to: CGRect(origin: CGPoint.zero, size: drawableSize)))
             context.render(scaledImage, to: drawable.texture, commandBuffer: commandBuffer, bounds: scaledImage.extent, colorSpace: CGColorSpaceCreateDeviceRGB())

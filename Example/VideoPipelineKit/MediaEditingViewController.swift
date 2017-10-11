@@ -85,7 +85,7 @@ class MediaEditingViewController: UIViewController, PlayerItemPipelineDisplayLin
 
     lazy var renderPipeline: RenderPipeline = {
         let config = RenderPipeline.Config.metal(device: MTLCreateSystemDefaultDevice()!)
-        let renderPipeline = RenderPipeline(config: config)
+        let renderPipeline = RenderPipeline(config: config, size: cropRect.size)
         renderPipeline.filters.append(self.initialSwipeFilter)
         renderPipeline.size = self.cropRect.size
         return renderPipeline
@@ -122,7 +122,7 @@ class MediaEditingViewController: UIViewController, PlayerItemPipelineDisplayLin
         previewLayer.frame = view.layer.bounds
         view.layer.insertSublayer(previewLayer, at: 0)
 
-        filterScrollView.filters = [instantFilter, monoFilter, skinFilter]
+        filterScrollView.filters = [(instantFilter, "Instant"), (monoFilter, "Mono"), (skinFilter, "Skin")]
     }
 
     override func viewDidAppear(_ animated: Bool) {

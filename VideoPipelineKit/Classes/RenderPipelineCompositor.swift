@@ -6,9 +6,11 @@
 //
 
 import AVFoundation
+import CoreImage
 
 public class RenderPipelineLayerInstruction: AVMutableVideoCompositionLayerInstruction {
-    public init(assetTrack: AVAssetTrack) {
+    public init(assetTrack: AVAssetTrack, renderPipeline: RenderPipeline? = nil) {
+        self.renderPipeline = renderPipeline
         super.init()
         self.trackID = assetTrack.trackID
     }
@@ -17,10 +19,10 @@ public class RenderPipelineLayerInstruction: AVMutableVideoCompositionLayerInstr
         fatalError("init(coder:) has not been implemented")
     }
 
-    private var cropInstructions = [(CGRect, CGRect, CMTimeRange)]()
+    private var postTransformCropInstructions = [(CGRect, CGRect, CMTimeRange)]()
 
     public func getPostTransformCropRectangleRamp(for time: CMTime, startCropRectangle: UnsafeMutablePointer<CGRect>?, endCropRectangle: UnsafeMutablePointer<CGRect>?, timeRange: UnsafeMutablePointer<CMTimeRange>?) -> Bool {
-        guard let cropInstruction = cropInstructions.first(where: { cropInstruction -> Bool in
+        guard let cropInstruction = postTransformCropInstructions.first(where: { cropInstruction -> Bool in
             return CMTimeRangeContainsTime(cropInstruction.2, time)
         }) else {
             return false
@@ -34,7 +36,7 @@ public class RenderPipelineLayerInstruction: AVMutableVideoCompositionLayerInstr
     }
 
     public func setPostTransformCropRectangleRamp(fromStartCropRectangle startCropRectangle: CGRect, toEndCropRectangle endCropRectangle: CGRect, timeRange: CMTimeRange) {
-        cropInstructions.append((startCropRectangle, endCropRectangle, timeRange))
+        postTransformCropInstructions.append((startCropRectangle, endCropRectangle, timeRange))
     }
 
     public func setPostTransformCropRectangle(_ cropRectangle: CGRect, at time: CMTime) {
@@ -42,6 +44,8 @@ public class RenderPipelineLayerInstruction: AVMutableVideoCompositionLayerInstr
         let timeRange = CMTimeRange(start: time, end: endTime)
         setPostTransformCropRectangleRamp(fromStartCropRectangle: cropRectangle, toEndCropRectangle: cropRectangle, timeRange: timeRange)
     }
+
+    public var renderPipeline: RenderPipeline?
 }
 
 public class RenderPipelineCompositor: NSObject, AVVideoCompositing {
@@ -100,33 +104,53 @@ public class RenderPipelineCompositor: NSObject, AVVideoCompositing {
                 return composedImage
             }
 
-            let layerImage = CIImage(cvPixelBuffer: layerImageBuffer)
+            var layerImage = CIImage(cvPixelBuffer: layerImageBuffer)
 
             var cropRectangle = layerImage.extent
-            instruction.getCropRectangleRamp(for: asyncVideoCompositionRequest.compositionTime, startCropRectangle: &cropRectangle, endCropRectangle: nil, timeRange: nil)
-            let croppedImage = layerImage.cropping(to: cropRectangle)
-
-            var transform = CGAffineTransform.identity
-            instruction.getTransformRamp(for: asyncVideoCompositionRequest.compositionTime, start: &transform, end: nil, timeRange: nil)
-            let transformedImage = croppedImage.applying(transform)
-
-            guard let instruction = instruction as? RenderPipelineLayerInstruction else {
-                return transformedImage.compositingOverImage(composedImage)
+            if instruction.getCropRectangleRamp(for: asyncVideoCompositionRequest.compositionTime, startCropRectangle: &cropRectangle, endCropRectangle: nil, timeRange: nil) {
+                layerImage = layerImage.cropping(to: cropRectangle)
             }
 
-            var postTransformCropRectangle = transformedImage.extent
-            _ = instruction.getPostTransformCropRectangleRamp(for: asyncVideoCompositionRequest.compositionTime, startCropRectangle: &postTransformCropRectangle, endCropRectangle: nil, timeRange: nil)
-            let postTransformCropTranslation = CGAffineTransform(translationX: -postTransformCropRectangle.origin.x, y: -postTransformCropRectangle.origin.y)
-            let postTransformCroppedImage = transformedImage.cropping(to: postTransformCropRectangle).applying(postTransformCropTranslation)
+            var transform = CGAffineTransform.identity
+            if instruction.getTransformRamp(for: asyncVideoCompositionRequest.compositionTime, start: &transform, end: nil, timeRange: nil) {
+                layerImage = layerImage.applying(transform)
+            }
 
-            return postTransformCroppedImage.compositingOverImage(composedImage)
+            guard let instruction = instruction as? RenderPipelineLayerInstruction else {
+                return layerImage.compositingOverImage(composedImage)
+            }
+
+            var postTransformCropRectangle = layerImage.extent
+            if instruction.getPostTransformCropRectangleRamp(for: asyncVideoCompositionRequest.compositionTime, startCropRectangle: &postTransformCropRectangle, endCropRectangle: nil, timeRange: nil) {
+                let postTransformCropTranslation = CGAffineTransform(translationX: -postTransformCropRectangle.origin.x, y: -postTransformCropRectangle.origin.y)
+                layerImage = layerImage.cropping(to: postTransformCropRectangle).applying(postTransformCropTranslation)
+            }
+
+            if let renderPipeline = instruction.renderPipeline {
+                layerImage = renderPipeline.rendererdImage(image: layerImage)
+            }
+
+            return layerImage.compositingOverImage(composedImage)
         })
 
         let transformedImage = composedImage.applying(asyncVideoCompositionRequest.renderContext.renderTransform)
+
+        assert(transformedImage.extent.size == asyncVideoCompositionRequest.renderContext.size, "Resulting image should be \(asyncVideoCompositionRequest.renderContext.size)")
 
         imageContext.render(transformedImage, to: pixelBuffer)
         asyncVideoCompositionRequest.finish(withComposedVideoFrame: pixelBuffer)
         let duration = Date().timeIntervalSince(startedAt)
         print("Rendered a frame in \(duration) seconds")
+    }
+
+    private func aspectFillScaleFactor(from originalSize: CGSize, relativeTo targetSize: CGSize) -> CGFloat {
+        let currentRatio: CGFloat = originalSize.width / originalSize.height
+        let targetRatio = targetSize.width / targetSize.height
+
+        if currentRatio < targetRatio {
+            return targetSize.width / originalSize.width
+        }
+
+        return targetSize.height / originalSize.height
     }
 }

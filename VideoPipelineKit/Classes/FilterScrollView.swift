@@ -15,7 +15,7 @@ public class FilterScrollView: UIView, UIScrollViewDelegate {
 
     public weak var delegate: FilterScrollViewDelegate?
 
-    public var filters = [CIFilter]()
+    public var filters = [(CIFilter, String?)]()
 
     lazy var scrollView: InfiniteScrollView = {
         let scrollView = InfiniteScrollView()
@@ -48,12 +48,12 @@ public class FilterScrollView: UIView, UIScrollViewDelegate {
         })
     }
 
-    public var currentFilters: [(CIFilter, CGRect)] {
+    public var currentFilters: [(CIFilter, CGRect, String?)] {
         guard filters.count > 0 else {
-            return [(CIFilter, CGRect)]()
+            return [(CIFilter, CGRect, String?)]()
         }
 
-        return sortedVisibleSubviews.flatMap { view -> (CIFilter, CGRect)? in
+        return sortedVisibleSubviews.flatMap { view -> (CIFilter, CGRect, String?)? in
             let rect = view.convert(view.bounds, to: self)
 
             guard bounds.intersects(rect) else {
@@ -66,9 +66,9 @@ public class FilterScrollView: UIView, UIScrollViewDelegate {
                 filterIndex += filters.count
             }
 
-            let filter = filters[filterIndex]
+            let (filter, name) = filters[filterIndex]
 
-            return (filter, rect)
+            return (filter, rect, name)
         }
     }
 }

@@ -54,19 +54,7 @@ public class PlayerItemPipelineDisplayLink {
         }
     }
 
-    let dispatchSemaphore = DispatchSemaphore(value: 1)
-
     @objc func displayLinkFired(_ displayLink: CADisplayLink) {
-        let waitTime = dispatchSemaphore.wait(timeout: DispatchTime.now())
-        if waitTime != .success {
-            print("Skipped a frame, still rendering previous frames")
-            return
-        }
-
-        defer {
-            dispatchSemaphore.signal()
-        }
-
         let nextFrameTime = displayLink.timestamp
         let time = videoOutput.itemTime(forHostTime: nextFrameTime)
 
@@ -74,9 +62,7 @@ public class PlayerItemPipelineDisplayLink {
             if videoOutput.hasNewPixelBuffer(forItemTime: time), let pixelBuffer = videoOutput.copyPixelBuffer(forItemTime: time, itemTimeForDisplay: nil) {
                 let image = CIImage(cvPixelBuffer: pixelBuffer)
                 delegate?.willRender(image, through: renderPipeline)
-                renderPipeline.render(image: image)
-            } else {
-                print("Skipped a frame, could not get pixel buffer")
+                renderPipeline.render(ciImage: image)
             }
         }
     }
