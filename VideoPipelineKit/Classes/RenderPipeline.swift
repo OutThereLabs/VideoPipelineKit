@@ -9,7 +9,7 @@ import AVKit
 import SceneKit
 
 public protocol RenderPipelineOutput {
-    func render(image: CIImage, context: CIContext)
+    func render(image: CIImage, context: CIContext, pipeline: RenderPipeline)
 }
 
 public protocol RenderPipelineListener {
@@ -19,10 +19,15 @@ public protocol RenderPipelineListener {
 public class RenderPipeline: NSObject {
     public enum Config {
         case metal(device: MTLDevice)
+        case eagl(context: EAGLContext)
 
         public static var defaultConfig: Config {
-            let device = MTLCreateSystemDefaultDevice()!
-            return .metal(device: device)
+            if let device = MTLCreateSystemDefaultDevice() {
+                return .metal(device: device)
+            }
+
+            let eaglContext = EAGLContext(api: EAGLRenderingAPI.openGLES2)!
+            return .eagl(context: eaglContext)
         }
     }
 
@@ -38,8 +43,19 @@ public class RenderPipeline: NSObject {
         switch config {
         case .metal(let device):
             self.imageContext = CIContext(mtlDevice: device)
+        case .eagl(let context):
+            self.imageContext = CIContext(eaglContext: context)
         }
     }
+
+    public lazy var commandQueue: MTLCommandQueue? = {
+        switch self.config {
+        case .metal(let device):
+            return device.makeCommandQueue()
+        case .eagl:
+            return nil
+        }
+    }()
 
     public var size: CGSize {
         didSet {
@@ -138,7 +154,7 @@ public class RenderPipeline: NSObject {
 
     func forwardToOutputs(image: CIImage) {
         for output in outputs {
-            output.render(image: image, context: imageContext)
+            output.render(image: image, context: imageContext, pipeline: self)
         }
     }
 

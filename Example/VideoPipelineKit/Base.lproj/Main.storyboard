@@ -24,7 +24,31 @@
                         <subviews>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="bwz-Qn-sKk">
                                 <rect key="frame" x="0.0" y="0.0" width="414" height="736"/>
+                                <subviews>
+                                    <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="w3x-eE-kMI">
+                                        <rect key="frame" x="0.0" y="615" width="172.66666666666666" height="89"/>
+                                        <subviews>
+                                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="d3u-A4-3hE">
+                                                <rect key="frame" x="71.333333333333329" y="23" width="30" height="44"/>
+                                                <fontDescription key="fontDescription" style="UICTFontTextStyleTitle1"/>
+                                                <color key="tintColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                                <state key="normal" title="+"/>
+                                                <connections>
+                                                    <action selector="importPhoto:" destination="vXZ-lx-hvc" eventType="touchUpInside" id="V3M-ZK-t0D"/>
+                                                </connections>
+                                            </button>
+                                        </subviews>
+                                        <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                        <constraints>
+                                            <constraint firstItem="d3u-A4-3hE" firstAttribute="centerY" secondItem="w3x-eE-kMI" secondAttribute="centerY" id="bWT-gX-MoB"/>
+                                            <constraint firstItem="d3u-A4-3hE" firstAttribute="centerX" secondItem="w3x-eE-kMI" secondAttribute="centerX" id="qaf-jA-Iwc"/>
+                                        </constraints>
+                                    </view>
+                                </subviews>
                                 <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <constraints>
+                                    <constraint firstItem="w3x-eE-kMI" firstAttribute="leading" secondItem="bwz-Qn-sKk" secondAttribute="leading" id="1rG-Cc-NRd"/>
+                                </constraints>
                             </view>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="ivP-NE-sya">
                                 <rect key="frame" x="172.66666666666666" y="615" width="69" height="89"/>
@@ -42,9 +66,12 @@
                         </subviews>
                         <color key="backgroundColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                         <constraints>
+                            <constraint firstItem="w3x-eE-kMI" firstAttribute="top" secondItem="ivP-NE-sya" secondAttribute="top" id="0eI-hl-pwG"/>
                             <constraint firstAttribute="trailing" secondItem="bwz-Qn-sKk" secondAttribute="trailing" id="5Gh-2u-uo4"/>
                             <constraint firstItem="bwz-Qn-sKk" firstAttribute="top" secondItem="kh9-bI-dsS" secondAttribute="top" id="GF8-2w-fdD"/>
                             <constraint firstItem="ivP-NE-sya" firstAttribute="centerX" secondItem="kh9-bI-dsS" secondAttribute="centerX" id="M7r-B7-pCp"/>
+                            <constraint firstItem="w3x-eE-kMI" firstAttribute="bottom" secondItem="ivP-NE-sya" secondAttribute="bottom" id="PNW-no-UlB"/>
+                            <constraint firstItem="ivP-NE-sya" firstAttribute="leading" secondItem="w3x-eE-kMI" secondAttribute="trailing" id="Z8u-Ts-XzE"/>
                             <constraint firstItem="2fi-mo-0CV" firstAttribute="top" secondItem="ivP-NE-sya" secondAttribute="bottom" constant="32" id="u9g-yQ-WHU"/>
                             <constraint firstItem="2fi-mo-0CV" firstAttribute="top" secondItem="bwz-Qn-sKk" secondAttribute="bottom" id="uw6-6i-AdD"/>
                             <constraint firstItem="bwz-Qn-sKk" firstAttribute="leading" secondItem="kh9-bI-dsS" secondAttribute="leading" id="yhC-07-euS"/>
@@ -72,6 +99,15 @@
                         <rect key="frame" x="0.0" y="0.0" width="414" height="736"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
+                            <mtkView contentMode="scaleToFill" fixedFrame="YES" colorPixelFormat="BGRA8Unorm" depthStencilPixelFormat="Depth32Float" translatesAutoresizingMaskIntoConstraints="NO" id="bpj-uQ-45A" userLabel="Metal Output">
+                                <rect key="frame" x="0.0" y="0.0" width="414" height="736"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                <color key="clearColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                            </mtkView>
+                            <glkView opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" fixedFrame="YES" enableSetNeedsDisplay="NO" translatesAutoresizingMaskIntoConstraints="NO" id="h1X-Hv-WIK">
+                                <rect key="frame" x="0.0" y="0.0" width="414" height="736"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                            </glkView>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="shK-6p-mwI" customClass="FilterScrollView" customModule="VideoPipelineKit">
                                 <rect key="frame" x="0.0" y="0.0" width="414" height="736"/>
                             </view>
@@ -98,13 +134,15 @@
                         </constraints>
                     </view>
                     <connections>
+                        <outlet property="eaglOutput" destination="h1X-Hv-WIK" id="gZ4-cU-dOq"/>
                         <outlet property="filterScrollView" destination="shK-6p-mwI" id="uZD-8v-asp"/>
+                        <outlet property="metalOutput" destination="bpj-uQ-45A" id="gPM-Y4-tYL"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="Mhq-ig-asE" userLabel="First Responder" sceneMemberID="firstResponder"/>
                 <exit id="yUe-Jy-QFE" userLabel="Exit" sceneMemberID="exit"/>
             </objects>
-            <point key="canvasLocation" x="1045.5999999999999" y="31.934032983508249"/>
+            <point key="canvasLocation" x="1044.9275362318842" y="31.793478260869566"/>
         </scene>
         <!--Navigation Controller-->
         <scene sceneID="PEe-Yd-bcc">

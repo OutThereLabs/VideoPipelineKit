@@ -11,7 +11,7 @@ import VideoPipelineKit
 import CameraManager
 import AVKit
 
-class RecordingViewController: UIViewController {
+class RecordingViewController: UIViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
     lazy var cameraManager: CameraManager = {
         let cameraManager = CameraManager()
         cameraManager.cameraOutputMode = .videoOnly
@@ -22,6 +22,16 @@ class RecordingViewController: UIViewController {
         }
         return cameraManager
     }()
+
+    @IBAction func importPhoto(_ sender: Any) {
+        let picker = UIImagePickerController()
+        picker.sourceType = .photoLibrary
+        if let availableTypes = UIImagePickerController.availableMediaTypes(for: .photoLibrary) {
+            picker.mediaTypes = availableTypes
+        }
+        picker.delegate = self
+        present(picker, animated: true, completion: nil)
+    }
 
     @IBAction func startRecording(_ sender: Any) {
         cameraManager.startRecordingVideo()
@@ -57,6 +67,19 @@ class RecordingViewController: UIViewController {
 
         if let editingViewController = segue.destination as? MediaEditingViewController {
             editingViewController.asset = sender as? AVURLAsset
+        }
+    }
+
+    // MARK: - UIImagePickerControllerDelegate
+
+    func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [String : Any]) {
+        picker.dismiss(animated: true) {
+            if let url = info[UIImagePickerControllerMediaURL] as? URL {
+                DispatchQueue.main.async {
+                    let asset = AVURLAsset(url: url)
+                    self.performSegue(withIdentifier: "Edit Media", sender: asset)
+                }
+            }
         }
     }
 }

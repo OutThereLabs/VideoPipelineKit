@@ -8,6 +8,8 @@
 
 import UIKit
 import AVKit
+import MetalKit
+import GLKit
 import VideoPipelineKit
 
 class MediaEditingViewController: UIViewController, PlayerItemPipelineDisplayLinkDelegate {
@@ -34,11 +36,6 @@ class MediaEditingViewController: UIViewController, PlayerItemPipelineDisplayLin
             }
         })
         return player
-    }()
-
-    lazy var previewLayer: CALayer = {
-        let previewLayer = self.renderPipeline.createPreviewLayer(withSize: self.view.layer.bounds.size)
-        return previewLayer
     }()
 
     let instantFilter: CIFilter = {
@@ -84,12 +81,15 @@ class MediaEditingViewController: UIViewController, PlayerItemPipelineDisplayLin
     }
 
     lazy var renderPipeline: RenderPipeline = {
-        let config = RenderPipeline.Config.metal(device: MTLCreateSystemDefaultDevice()!)
+        let config = RenderPipeline.Config.defaultConfig
         let renderPipeline = RenderPipeline(config: config, size: cropRect.size)
         renderPipeline.filters.append(self.initialSwipeFilter)
         renderPipeline.size = self.cropRect.size
         return renderPipeline
     }()
+
+    @IBOutlet weak var metalOutput: MTKView!
+    @IBOutlet weak var eaglOutput: GLKView!
 
     @IBOutlet weak var filterScrollView: FilterScrollView!
 
@@ -119,8 +119,18 @@ class MediaEditingViewController: UIViewController, PlayerItemPipelineDisplayLin
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        previewLayer.frame = view.layer.bounds
-        view.layer.insertSublayer(previewLayer, at: 0)
+        switch renderPipeline.config {
+        case .metal:
+            eaglOutput.isHidden = true
+            metalOutput.isHidden = false
+            renderPipeline.add(output: metalOutput)
+        case .eagl(let context):
+            eaglOutput.isHidden = false
+            metalOutput.isHidden = true
+            let output = GLKViewRenderPipelineOutput(glkView: eaglOutput, context: renderPipeline.imageContext)
+            renderPipeline.add(output: output)
+            eaglOutput.context = context
+        }
 
         filterScrollView.filters = [(instantFilter, "Instant"), (monoFilter, "Mono"), (skinFilter, "Skin")]
     }

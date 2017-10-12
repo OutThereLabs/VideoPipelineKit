@@ -127,15 +127,18 @@ public class RenderPipelineCompositor: NSObject, AVVideoCompositing {
             }
 
             if let renderPipeline = instruction.renderPipeline {
+                let pipelineStartedAt = Date()
+
                 layerImage = renderPipeline.rendererdImage(image: layerImage)
+
+                let duration = Date().timeIntervalSince(pipelineStartedAt)
+                print("Pipeline rendered a frame in \(duration) seconds")
             }
 
             return layerImage.compositingOverImage(composedImage)
         })
 
         let transformedImage = composedImage.applying(asyncVideoCompositionRequest.renderContext.renderTransform)
-
-        assert(transformedImage.extent.size == asyncVideoCompositionRequest.renderContext.size, "Resulting image should be \(asyncVideoCompositionRequest.renderContext.size)")
 
         imageContext.render(transformedImage, to: pixelBuffer)
         asyncVideoCompositionRequest.finish(withComposedVideoFrame: pixelBuffer)
