@@ -12,42 +12,42 @@ import CameraManager
 import AVKit
 
 class RecordingViewController: UIViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
-    lazy var cameraManager: CameraManager = {
-        let cameraManager = CameraManager()
-        cameraManager.cameraOutputMode = .videoOnly
-        cameraManager.writeFilesToPhoneLibrary = false
-        cameraManager.cameraDevice = .front
-        cameraManager.showErrorBlock = { (erTitle: String, erMessage: String) in
-            assertionFailure(erMessage)
-        }
-        return cameraManager
-    }()
-
     @IBAction func importPhoto(_ sender: Any) {
         let picker = UIImagePickerController()
         picker.sourceType = .photoLibrary
+
+        if #available(iOS 11.0, *) {
+            picker.videoExportPreset = AVAssetExportPresetPassthrough
+        }
         if let availableTypes = UIImagePickerController.availableMediaTypes(for: .photoLibrary) {
             picker.mediaTypes = availableTypes
         }
+
         picker.delegate = self
         present(picker, animated: true, completion: nil)
     }
 
+    let captureSession = CaptureSession(renderPipeline: RenderPipeline(config: .defaultConfig, size: CGSize(width: 1080, height: 1920)))
+
     @IBAction func startRecording(_ sender: Any) {
-        cameraManager.startRecordingVideo()
+        do {
+            try captureSession.startRecording()
+        } catch {
+            assertionFailure(error.localizedDescription)
+        }
     }
 
     @IBOutlet weak var cameraView: UIView!
 
     @IBAction func stopRecording(_ sender: Any) {
-        cameraManager.stopVideoRecording { (url, error) in
-            if let error = error {
-                assertionFailure(error.localizedDescription)
-            }
-
-            if let url = url {
-                let asset = AVURLAsset(url: url)
-                self.performSegue(withIdentifier: "Edit Media", sender: asset)
+        let outputURL = captureSession.outputURL
+        captureSession.stopRecording {
+            DispatchQueue.main.async {
+                if let outputURL = outputURL {
+                    let asset = AVURLAsset(url: outputURL)
+                    let playerItem = AVPlayerItem(asset: asset)
+                    self.performSegue(withIdentifier: "Edit Media", sender: playerItem)
+                }
             }
         }
     }
@@ -58,15 +58,27 @@ class RecordingViewController: UIViewController, UIImagePickerControllerDelegate
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        if let previewLayer = captureSession.previewLayer {
+            cameraView.layer.addSublayer(previewLayer)
+        }
+    }
 
-        _ = cameraManager.addPreviewLayerToView(cameraView)
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        captureSession.previewLayer?.frame = cameraView.layer.bounds
+        captureSession.running = true
+    }
+
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        captureSession.running = false
     }
 
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         super.prepare(for: segue, sender: sender)
 
-        if let editingViewController = segue.destination as? MediaEditingViewController {
-            editingViewController.asset = sender as? AVURLAsset
+        if let editingViewController = segue.destination as? MediaEditingViewController, let playerItem = sender as? AVPlayerItem {
+            editingViewController.playerItem = playerItem
         }
     }
 
@@ -75,10 +87,9 @@ class RecordingViewController: UIViewController, UIImagePickerControllerDelegate
     func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [String : Any]) {
         picker.dismiss(animated: true) {
             if let url = info[UIImagePickerControllerMediaURL] as? URL {
-                DispatchQueue.main.async {
-                    let asset = AVURLAsset(url: url)
-                    self.performSegue(withIdentifier: "Edit Media", sender: asset)
-                }
+                let asset = AVURLAsset(url: url)
+                let playerItem = AVPlayerItem(asset: asset)
+                self.performSegue(withIdentifier: "Edit Media", sender: playerItem)
             }
         }
     }

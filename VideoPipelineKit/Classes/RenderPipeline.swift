@@ -17,6 +17,10 @@ public protocol RenderPipelineListener {
 }
 
 public class RenderPipeline: NSObject {
+    static let shareGroup: EAGLSharegroup = {
+        return EAGLSharegroup()
+    }()
+
     public enum Config {
         case metal(device: MTLDevice)
         case eagl(context: EAGLContext)
@@ -26,7 +30,7 @@ public class RenderPipeline: NSObject {
                 return .metal(device: device)
             }
 
-            let eaglContext = EAGLContext(api: EAGLRenderingAPI.openGLES2)!
+            let eaglContext = EAGLContext(api: EAGLRenderingAPI.openGLES2, sharegroup: shareGroup)!
             return .eagl(context: eaglContext)
         }
     }
@@ -108,6 +112,15 @@ public class RenderPipeline: NSObject {
             }
             return outputImage
         }
+    }
+
+    public func process(sampleBuffer: CMSampleBuffer) -> CMSampleBuffer {
+        guard filters.count > 0 else {
+            return sampleBuffer
+        }
+
+        assertionFailure("Can't filter sample buffers yet")
+        return sampleBuffer
     }
 
     public func process(image: UIImage) throws -> UIImage {

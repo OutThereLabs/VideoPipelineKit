@@ -95,6 +95,10 @@
 		D0B9DCBA50606458E1D9E8A7072AD717 /* YUCISurfaceBlur.m in Sources */ = {isa = PBXBuildFile; fileRef = F32DF19B9137D3A738954AB830CC0CAA /* YUCISurfaceBlur.m */; };
 		D1FCAB7ACCDAB223940A21E513688AE3 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6262A7806E1343F0C61C10C866258978 /* Foundation.framework */; };
 		D27739ECCD0BB509002DAC6E82FAC08C /* YUCIFilterConstructor.h in Headers */ = {isa = PBXBuildFile; fileRef = E43A7B9309F2DBA12FF39683EA8381AD /* YUCIFilterConstructor.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D31537541F9AAEB50096F597 /* Utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = D31537531F9AAEB50096F597 /* Utils.swift */; };
+		D31537561F9E57610096F597 /* MovieFileOutput.swift in Sources */ = {isa = PBXBuildFile; fileRef = D31537551F9E57610096F597 /* MovieFileOutput.swift */; };
+		D31537581F9E68510096F597 /* RecordingSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = D31537571F9E68510096F597 /* RecordingSession.swift */; };
+		D37CD45B1F9FBBEC0013C01A /* CaptureSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = D37CD45A1F9FBBEC0013C01A /* CaptureSession.swift */; };
 		D37E98A41F901B80009581B2 /* GLKView+RenderPipelineOutput.swift in Sources */ = {isa = PBXBuildFile; fileRef = D37E98A31F901B80009581B2 /* GLKView+RenderPipelineOutput.swift */; };
 		D4C837565091CA15A11E0CCB21B27BE1 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EEE02346B1D82BFA9B1FA33FC30F9F85 /* AVFoundation.framework */; };
 		D574556C139E847AB2C34FDCCE1615EC /* Vivid-dummy.m in Sources */ = {isa = PBXBuildFile; fileRef = 8B2F7859C4D5ED8D3CE93A6CB0D94207 /* Vivid-dummy.m */; };
@@ -259,6 +263,10 @@
 		CCE47446F734510DACDE4A650D42FF2C /* CameraManager-prefix.pch */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "CameraManager-prefix.pch"; sourceTree = "<group>"; };
 		CD67E0C3C96D29837300D6CA09139AB1 /* Pods-VideoPipelineKit_Tests-frameworks.sh */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.script.sh; path = "Pods-VideoPipelineKit_Tests-frameworks.sh"; sourceTree = "<group>"; };
 		D1604D5078EB054EC8641F682B1083FF /* YUCICrossZoomTransition.cikernel */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; name = YUCICrossZoomTransition.cikernel; path = Sources/YUCICrossZoomTransition.cikernel; sourceTree = "<group>"; };
+		D31537531F9AAEB50096F597 /* Utils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Utils.swift; path = VideoPipelineKit/Classes/Utils.swift; sourceTree = "<group>"; };
+		D31537551F9E57610096F597 /* MovieFileOutput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = MovieFileOutput.swift; path = VideoPipelineKit/Classes/MovieFileOutput.swift; sourceTree = "<group>"; };
+		D31537571F9E68510096F597 /* RecordingSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = RecordingSession.swift; path = VideoPipelineKit/Classes/RecordingSession.swift; sourceTree = "<group>"; };
+		D37CD45A1F9FBBEC0013C01A /* CaptureSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CaptureSession.swift; path = VideoPipelineKit/Classes/CaptureSession.swift; sourceTree = "<group>"; };
 		D37E98A31F901B80009581B2 /* GLKView+RenderPipelineOutput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "GLKView+RenderPipelineOutput.swift"; path = "VideoPipelineKit/Classes/GLKView+RenderPipelineOutput.swift"; sourceTree = "<group>"; };
 		D65CAD59962C3F58A8FA2D40FCD08782 /* YUCIRGBToneCurve.cikernel */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; name = YUCIRGBToneCurve.cikernel; path = Sources/YUCIRGBToneCurve.cikernel; sourceTree = "<group>"; };
 		D6BCED461A9B8804736B12C137B919CB /* YUCIFilterUtilities.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = YUCIFilterUtilities.h; path = Sources/YUCIFilterUtilities.h; sourceTree = "<group>"; };
@@ -467,13 +475,17 @@
 				3AF182416EF95D5FC85420CE7EA7F390 /* AVPlayerItem+CroppedMedia.swift */,
 				483844F632716A7B93D137537F984A8D /* MTKView+RenderPipelineOutput.swift */,
 				D37E98A31F901B80009581B2 /* GLKView+RenderPipelineOutput.swift */,
+				D31537531F9AAEB50096F597 /* Utils.swift */,
 				7089C8792C91B8CD3B1095ECD4296198 /* FilterScrollView.swift */,
 				3E25540768334C069E0C07882B6E5085 /* InfiniteScrollView.h */,
 				2FA8EDD9CBF9B337663AFB8348F5BC5A /* InfiniteScrollView.m */,
 				50B988CB2244DD48A2253AB0594301BC /* PercentCropFilter.swift */,
 				35D4720E77C2A6EC5D178E4E9E452F76 /* PlayerItemPipelineDisplayLink.swift */,
 				DCF03EE26343E3BB11E7EEC8208F67E9 /* RenderPipeline.swift */,
+				D31537551F9E57610096F597 /* MovieFileOutput.swift */,
+				D31537571F9E68510096F597 /* RecordingSession.swift */,
 				AEDEEA96FFC3E48A8910C4F792B6ACCF /* RenderPipelineCompositor.swift */,
+				D37CD45A1F9FBBEC0013C01A /* CaptureSession.swift */,
 				500F3EC0AD014E0F92C3B3855E68B3CC /* VideoPipelineKit.h */,
 				4AE65A89DEFC6E16ECDF139202216E97 /* Support Files */,
 			);
@@ -898,9 +910,13 @@
 				9C503A8A9C0A6097804189638BD37114 /* AVAssetExportSession+CroppedMedia.swift in Sources */,
 				3358638C25D7AFDA2E8BC89EC59232B1 /* AVMutableVideoComposition+CroppedMedia.swift in Sources */,
 				68E0369773C78B2EC5A17FA78D3FA679 /* AVPlayerItem+CroppedMedia.swift in Sources */,
+				D31537581F9E68510096F597 /* RecordingSession.swift in Sources */,
 				515E7E60A93A0A6AC574040E060E8C9D /* MTKView+RenderPipelineOutput.swift in Sources */,
 				D37E98A41F901B80009581B2 /* GLKView+RenderPipelineOutput.swift in Sources */,
+				D31537541F9AAEB50096F597 /* Utils.swift in Sources */,
+				D37CD45B1F9FBBEC0013C01A /* CaptureSession.swift in Sources */,
 				5A2F6BDD48CBE7083E5AC698073FA24F /* FilterScrollView.swift in Sources */,
+				D31537561F9E57610096F597 /* MovieFileOutput.swift in Sources */,
 				DC7F55015842E97B61E6D9F773F3768F /* InfiniteScrollView.m in Sources */,
 				E0D204BD72ACE0CB3B381F9142E43FCD /* PercentCropFilter.swift in Sources */,
 				7D2D98A17BEDEFA60E05B0A3D701F07C /* PlayerItemPipelineDisplayLink.swift in Sources */,

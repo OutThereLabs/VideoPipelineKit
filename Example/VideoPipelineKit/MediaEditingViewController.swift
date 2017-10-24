@@ -59,6 +59,8 @@ class MediaEditingViewController: UIViewController, PlayerItemPipelineDisplayLin
     }()
 
     func updateSwipeFilterBasedOnScrollView() {
+        guard isViewLoaded else { return }
+
         let currentFilters = filterScrollView.currentFilters
 
         guard let firstFilter = currentFilters.first?.0 else { return assertionFailure() }
@@ -97,22 +99,16 @@ class MediaEditingViewController: UIViewController, PlayerItemPipelineDisplayLin
 
     var cropRect = CGRect(origin: CGPoint(x: 0, y: 0), size: CGSize(width: 607.5, height: 1080))
 
-    var asset: AVURLAsset? {
+    var playerItem: AVPlayerItem? {
         didSet {
-            guard let asset = asset else {
+            guard let playerItem = playerItem else {
                 looper = nil
                 player.removeAllItems()
                 return
             }
 
-            do {
-                let playerItem = try AVPlayerItem(asset: asset, croppedTo: cropRect)
-                looper = AVPlayerLooper(player: player, templateItem: playerItem)
-            } catch {
-                print("Error cropping asset item: \(error)")
-                let playerItem = AVPlayerItem(asset: asset)
-                looper = AVPlayerLooper(player: player, templateItem: playerItem)
-            }
+            player.insert(playerItem, after: nil)
+            looper = AVPlayerLooper(player: player, templateItem: playerItem)
         }
     }
     
@@ -120,9 +116,10 @@ class MediaEditingViewController: UIViewController, PlayerItemPipelineDisplayLin
         super.viewDidLoad()
 
         switch renderPipeline.config {
-        case .metal:
+        case .metal(let device):
             eaglOutput.isHidden = true
             metalOutput.isHidden = false
+            metalOutput.device = device
             renderPipeline.add(output: metalOutput)
         case .eagl(let context):
             eaglOutput.isHidden = false
@@ -130,6 +127,7 @@ class MediaEditingViewController: UIViewController, PlayerItemPipelineDisplayLin
             let output = GLKViewRenderPipelineOutput(glkView: eaglOutput, context: renderPipeline.imageContext)
             renderPipeline.add(output: output)
             eaglOutput.context = context
+            eaglOutput.contentScaleFactor = view.contentScaleFactor
         }
 
         filterScrollView.filters = [(instantFilter, "Instant"), (monoFilter, "Mono"), (skinFilter, "Skin")]

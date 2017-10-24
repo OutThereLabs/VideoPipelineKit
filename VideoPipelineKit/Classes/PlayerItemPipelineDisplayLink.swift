@@ -11,7 +11,10 @@ public extension AVPlayerItem {
     public func addDisplayLink(for renderPipeline: RenderPipeline) -> PlayerItemPipelineDisplayLink {
         let output = AVPlayerItemVideoOutput(pixelBufferAttributes: [kCVPixelBufferPixelFormatTypeKey as String: renderPipeline.pixelBufferPixelFormatType])
         add(output)
-        return PlayerItemPipelineDisplayLink(videoOutput: output, renderPipeline: renderPipeline)
+
+        let preferredTrackTransform = asset.tracks(withMediaType: AVMediaTypeVideo).first?.preferredTransform ?? CGAffineTransform.identity
+
+        return PlayerItemPipelineDisplayLink(videoOutput: output, preferredTrackTransform: preferredTrackTransform, renderPipeline: renderPipeline)
     }
 }
 
@@ -28,8 +31,11 @@ public class PlayerItemPipelineDisplayLink {
 
     let renderPipeline: RenderPipeline
 
-    public init(videoOutput: AVPlayerItemVideoOutput, renderPipeline: RenderPipeline) {
+    let preferredTrackTransform: CGAffineTransform
+
+    public init(videoOutput: AVPlayerItemVideoOutput, preferredTrackTransform: CGAffineTransform, renderPipeline: RenderPipeline) {
         self.videoOutput = videoOutput
+        self.preferredTrackTransform = preferredTrackTransform
         self.renderPipeline = renderPipeline
     }
 
@@ -60,7 +66,8 @@ public class PlayerItemPipelineDisplayLink {
 
         autoreleasepool {
             if videoOutput.hasNewPixelBuffer(forItemTime: time), let pixelBuffer = videoOutput.copyPixelBuffer(forItemTime: time, itemTimeForDisplay: nil) {
-                let image = CIImage(cvPixelBuffer: pixelBuffer)
+                let image = CIImage(cvPixelBuffer: pixelBuffer).applying(preferredTrackTransform)
+
                 delegate?.willRender(image, through: renderPipeline)
                 renderPipeline.render(ciImage: image)
             }

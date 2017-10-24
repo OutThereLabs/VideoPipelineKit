@@ -22,4 +22,32 @@ extension AVPlayerItem {
             self.videoComposition = videoComposition
         }
     }
+
+    public convenience init(assets: [AVAsset], croppedTo cropRectangle: CGRect?) throws {
+        let composition = AVMutableComposition()
+
+        let assetTracks = assets.flatMap { $0.tracks }
+
+        for assetTrack in assetTracks {
+            let compositionTrack = composition.addMutableTrack(withMediaType: assetTrack.mediaType, preferredTrackID: kCMPersistentTrackID_Invalid)
+            try compositionTrack.insertTimeRange(assetTrack.timeRange, of: assetTrack, at: kCMTimeZero)
+        }
+
+        self.init(asset: composition)
+
+        guard let firstVideoAsset = assets.first(where: {asset in
+            return asset.tracks(withMediaType:AVMediaTypeVideo).count > 0
+        }) else {
+            return
+        }
+
+        if let cropRectangle = cropRectangle {
+            let videoComposition = AVMutableVideoComposition(propertiesOf: firstVideoAsset, croppedTo: cropRectangle)
+            videoComposition.customVideoCompositorClass = RenderPipelineCompositor.self
+            videoComposition.renderSize = cropRectangle.size
+            self.videoComposition = videoComposition
+        } else {
+            self.videoComposition = AVVideoComposition(propertiesOf: firstVideoAsset)
+        }
+    }
 }

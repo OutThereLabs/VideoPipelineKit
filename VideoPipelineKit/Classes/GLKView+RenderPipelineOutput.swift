@@ -19,7 +19,6 @@ public class GLKViewRenderPipelineOutput: NSObject, GLKViewDelegate, RenderPipel
         self.context = context
         super.init()
         glkView.delegate = self
-        glkView.enableSetNeedsDisplay = true
     }
 
     // MARK: - RenderPipelineOutput
@@ -36,8 +35,10 @@ public class GLKViewRenderPipelineOutput: NSObject, GLKViewDelegate, RenderPipel
             return
         }
 
-
+        let startTime = Date()
         context.draw(imageToDraw, in: rect, from: imageToDraw.extent)
-        self.imageToDraw = nil
+        let duration = Date().timeIntervalSince(startTime)
+        let durationString = timeIntervalFormatter.string(from: duration) ?? "too long"
+        print("It took \(durationString) to draw in GLKView")
     }
 }

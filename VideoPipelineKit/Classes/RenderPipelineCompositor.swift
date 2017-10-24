@@ -73,7 +73,7 @@ public class RenderPipelineCompositor: NSObject, AVVideoCompositing {
     }
 
     public func startRequest(_ asyncVideoCompositionRequest: AVAsynchronousVideoCompositionRequest) {
-        let startedAt = Date()
+        let startTime = Date()
 
         guard asyncVideoCompositionRequest.sourceTrackIDs.count > 0 else {
             let error = NSError(domain: "com.outtherelabs.video", code: 500, userInfo: [NSLocalizedDescriptionKey: "No source track IDs"])
@@ -142,8 +142,9 @@ public class RenderPipelineCompositor: NSObject, AVVideoCompositing {
 
         imageContext.render(transformedImage, to: pixelBuffer)
         asyncVideoCompositionRequest.finish(withComposedVideoFrame: pixelBuffer)
-        let duration = Date().timeIntervalSince(startedAt)
-        print("Rendered a frame in \(duration) seconds")
+        let duration = Date().timeIntervalSince(startTime)
+        let durationString = timeIntervalFormatter.string(from: duration)
+        print("It took \(durationString) to render composition")
     }
 
     private func aspectFillScaleFactor(from originalSize: CGSize, relativeTo targetSize: CGSize) -> CGFloat {
