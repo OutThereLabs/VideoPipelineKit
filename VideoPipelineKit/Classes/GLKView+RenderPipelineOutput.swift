@@ -7,7 +7,7 @@
 
 import GLKit
 
-public class GLKViewRenderPipelineOutput: NSObject, GLKViewDelegate, RenderPipelineOutput {
+public class GLKViewRenderPipelineOutput: NSObject, GLKViewDelegate, RenderPipelineVideoOutput {
     let glkView: GLKView
     let context: CIContext
 

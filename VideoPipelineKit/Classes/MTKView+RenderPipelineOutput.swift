@@ -9,7 +9,7 @@ import UIKit
 import MetalKit
 import QuartzCore
 
-extension MTKView: RenderPipelineOutput {
+extension MTKView: RenderPipelineVideoOutput {
     public func render(image: CIImage, context: CIContext, pipeline: RenderPipeline) {
         guard let commandQueue = pipeline.commandQueue else { return }
 

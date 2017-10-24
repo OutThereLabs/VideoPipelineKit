@@ -8,7 +8,7 @@
 import AVKit
 import SceneKit
 
-public protocol RenderPipelineOutput {
+public protocol RenderPipelineVideoOutput {
     func render(image: CIImage, context: CIContext, pipeline: RenderPipeline)
 }
 
@@ -166,17 +166,17 @@ public class RenderPipeline: NSObject {
     }
 
     func forwardToOutputs(image: CIImage) {
-        for output in outputs {
-            output.render(image: image, context: imageContext, pipeline: self)
+        for videoOutput in videoOutputs {
+            videoOutput.render(image: image, context: imageContext, pipeline: self)
         }
     }
 
     // MARK: Output
 
-    var outputs = [RenderPipelineOutput]()
+    var videoOutputs = [RenderPipelineVideoOutput]()
 
-    public func add(output: RenderPipelineOutput) {
-        outputs.append(output)
+    public func add(videoOutput: RenderPipelineVideoOutput) {
+        videoOutputs.append(videoOutput)
     }
 }
 

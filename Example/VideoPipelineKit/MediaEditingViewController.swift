@@ -120,12 +120,12 @@ class MediaEditingViewController: UIViewController, PlayerItemPipelineDisplayLin
             eaglOutput.isHidden = true
             metalOutput.isHidden = false
             metalOutput.device = device
-            renderPipeline.add(output: metalOutput)
+            renderPipeline.add(videoOutput: metalOutput)
         case .eagl(let context):
             eaglOutput.isHidden = false
             metalOutput.isHidden = true
             let output = GLKViewRenderPipelineOutput(glkView: eaglOutput, context: renderPipeline.imageContext)
-            renderPipeline.add(output: output)
+            renderPipeline.add(videoOutput: output)
             eaglOutput.context = context
             eaglOutput.contentScaleFactor = view.contentScaleFactor
         }
