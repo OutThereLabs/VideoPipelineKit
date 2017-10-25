@@ -144,7 +144,7 @@ public class RenderPipelineCompositor: NSObject, AVVideoCompositing {
         asyncVideoCompositionRequest.finish(withComposedVideoFrame: pixelBuffer)
         let duration = Date().timeIntervalSince(startTime)
         let durationString = timeIntervalFormatter.string(from: duration)
-        print("It took \(durationString) to render composition")
+        print("It took \(String(describing: durationString)) to render composition")
     }
 
     private func aspectFillScaleFactor(from originalSize: CGSize, relativeTo targetSize: CGSize) -> CGFloat {

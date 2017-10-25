@@ -1,33 +1,22 @@
 PODS:
-  - CameraManager (3.2.0)
   - VideoPipelineKit (0.1.0)
   - Vivid (0.9)
   - YUCIHighPassSkinSmoothing (1.4):
     - Vivid
 
 DEPENDENCIES:
-  - CameraManager (from `https://github.com/JakubMazur/CameraManager.git`, branch `swift4`)
   - VideoPipelineKit (from `../`)
   - YUCIHighPassSkinSmoothing
 
 EXTERNAL SOURCES:
-  CameraManager:
-    :branch: swift4
-    :git: https://github.com/JakubMazur/CameraManager.git
   VideoPipelineKit:
-    :path: ../
-
-CHECKOUT OPTIONS:
-  CameraManager:
-    :commit: 3f0b410ef41141080a2c4b507b1b4de0322bfa6e
-    :git: https://github.com/JakubMazur/CameraManager.git
+    :path: "../"
 
 SPEC CHECKSUMS:
-  CameraManager: be6367a9408d279a54ac30d9772d46063cd0979b
   VideoPipelineKit: 7e2a7cff2a2aeb56b80d4beb706b1498cf3d89bc
   Vivid: 0fde7409beac71224deb151dd78f98a5bb860497
   YUCIHighPassSkinSmoothing: 8418fd1bf605ec22b647c57745b863b352f72097
 
-PODFILE CHECKSUM: 8ab577fe130f68d80a05999a162ad10d4ce1072a
+PODFILE CHECKSUM: 369ffac51850d0ec15c74252bfc9254155135cd4
 
-COCOAPODS: 1.4.0.beta.1
+COCOAPODS: 1.2.1

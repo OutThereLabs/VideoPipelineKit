@@ -10,11 +10,11 @@ import AVKit
 public class CaptureSession {
     public var automaticallyConfiguresApplicationAudioSession = true
 
-    public var running: Bool = false {
+    public var isRunning: Bool = false {
         didSet {
-            guard running != oldValue else { return }
+            guard isRunning != oldValue else { return }
 
-            if running {
+            if isRunning {
                 videoCaptureSession.startRunning()
             } else {
                 videoCaptureSession.stopRunning()

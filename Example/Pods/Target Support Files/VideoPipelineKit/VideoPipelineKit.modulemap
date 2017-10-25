@@ -1,6 +1,0 @@
-framework module VideoPipelineKit {
-  umbrella header "VideoPipelineKit-umbrella.h"
-
-  export *
-  module * { export * }
-}

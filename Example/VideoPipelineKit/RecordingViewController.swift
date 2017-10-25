@@ -8,7 +8,6 @@
 
 import UIKit
 import VideoPipelineKit
-import CameraManager
 import AVKit
 
 class RecordingViewController: UIViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
@@ -66,12 +65,12 @@ class RecordingViewController: UIViewController, UIImagePickerControllerDelegate
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         captureSession.previewLayer?.frame = cameraView.layer.bounds
-        captureSession.running = true
+        captureSession.isRunning = true
     }
 
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
-        captureSession.running = false
+        captureSession.isRunning = false
     }
 
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {

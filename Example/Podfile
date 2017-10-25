@@ -4,7 +4,6 @@ swift_version = '3.2'
 
 target 'VideoPipelineKit_Example' do
   pod 'VideoPipelineKit', :path => '../'
-  pod 'CameraManager', :git => 'https://github.com/JakubMazur/CameraManager.git', :branch => 'swift4'
   pod 'YUCIHighPassSkinSmoothing'
 
   target 'VideoPipelineKit_Tests' do
