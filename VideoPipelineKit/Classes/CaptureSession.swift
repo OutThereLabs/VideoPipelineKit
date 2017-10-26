@@ -8,6 +8,9 @@
 import AVKit
 
 public class CaptureSession {
+    
+    public var audioEnabled = true
+    
     public var automaticallyConfiguresApplicationAudioSession = true
 
     public var isRunning: Bool = false {
@@ -33,6 +36,14 @@ public class CaptureSession {
     let audioDeviceDiscoverySession = AVCaptureDevice.DiscoverySession(deviceTypes: [.builtInMicrophone], mediaType: AVMediaTypeAudio, position: .unspecified)
 
     let videoDeviceDiscoverySession = AVCaptureDevice.DiscoverySession(deviceTypes: [.builtInWideAngleCamera], mediaType: AVMediaTypeVideo, position: .unspecified)
+    
+    public lazy var currentVideoDevice: AVCaptureDevice? = {
+        return self.videoDeviceDiscoverySession?.devices.first
+    }()
+    
+    public var videoDevices: [AVCaptureDevice] {
+        return self.videoDeviceDiscoverySession?.devices ?? [AVCaptureDevice]()
+    }
 
     lazy var audioCaptureSession: AVCaptureSession = {
         let audioCaptureSession = AVCaptureSession()
@@ -54,10 +65,10 @@ public class CaptureSession {
         let videoCaptureSession = AVCaptureSession()
         videoCaptureSession.automaticallyConfiguresApplicationAudioSession = false
 
-        if let builtInCamera = self.videoDeviceDiscoverySession?.devices.first {
+        if let currentVideoDevice = self.currentVideoDevice {
             do {
-                let buitInCameraInput = try AVCaptureDeviceInput(device: builtInCamera)
-                videoCaptureSession.addInput(buitInCameraInput)
+                let currentVideoDeviceInput = try AVCaptureDeviceInput(device: currentVideoDevice)
+                videoCaptureSession.addInput(currentVideoDeviceInput)
             } catch {
                 print("Error adding camera: \(error)")
             }
@@ -83,6 +94,14 @@ public class CaptureSession {
     }
 
     var audioSession = AVAudioSession.sharedInstance()
+    
+    public func prepare() throws {
+        
+    }
+    
+    public func unprepare() {
+        
+    }
 
     // MARK: - Recording
 
@@ -100,18 +119,24 @@ public class CaptureSession {
         currentRecordingSession = recordingSession
         return recordingSession
     }
+    
+    public var isRecording: Bool {
+        return (currentRecordingSession?.state == .recording) ?? false
+    }
 
     public func startRecording() throws {
-        if automaticallyConfiguresApplicationAudioSession {
-            if AVAudioSession.sharedInstance().isOtherAudioPlaying {
-                try AVAudioSession.sharedInstance().setActive(false, with: .notifyOthersOnDeactivation)
+        if audioEnabled {
+            if automaticallyConfiguresApplicationAudioSession {
+                if AVAudioSession.sharedInstance().isOtherAudioPlaying {
+                    try AVAudioSession.sharedInstance().setActive(false, with: .notifyOthersOnDeactivation)
+                }
+                try AVAudioSession.sharedInstance().setCategory(AVAudioSessionCategoryPlayAndRecord, with: [.mixWithOthers, .defaultToSpeaker])
+                try AVAudioSession.sharedInstance().overrideOutputAudioPort(AVAudioSessionPortOverride.speaker)
+                try AVAudioSession.sharedInstance().setActive(true)
             }
-            try AVAudioSession.sharedInstance().setCategory(AVAudioSessionCategoryPlayAndRecord, with: [.mixWithOthers, .defaultToSpeaker])
-            try AVAudioSession.sharedInstance().overrideOutputAudioPort(AVAudioSessionPortOverride.speaker)
-            try AVAudioSession.sharedInstance().setActive(true)
+            
+            audioCaptureSession.startRunning()
         }
-
-        audioCaptureSession.startRunning()
 
         let recordingSession = try currentRecordingSession ?? initializeRecordingSession()
         recordingSession.start(transform: transform)
@@ -121,16 +146,18 @@ public class CaptureSession {
         if let recordingSession = currentRecordingSession {
             recordingSession.finish(completionHandler: handler)
         }
-
-        audioCaptureSession.stopRunning()
-
-        if automaticallyConfiguresApplicationAudioSession {
-            do {
-                try audioSession.setActive(false, with: .notifyOthersOnDeactivation)
-                try audioSession.setCategory(AVAudioSessionCategoryAmbient)
-                try audioSession.overrideOutputAudioPort(.none)
-            } catch {
-                print("Error switching audio: \(error)")
+        
+        if audioEnabled {
+            audioCaptureSession.stopRunning()
+            
+            if automaticallyConfiguresApplicationAudioSession {
+                do {
+                    try audioSession.setActive(false, with: .notifyOthersOnDeactivation)
+                    try audioSession.setCategory(AVAudioSessionCategoryAmbient)
+                    try audioSession.overrideOutputAudioPort(.none)
+                } catch {
+                    print("Error switching audio: \(error)")
+                }
             }
         }
     }
