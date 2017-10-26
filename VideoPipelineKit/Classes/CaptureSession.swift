@@ -61,7 +61,7 @@ public class CaptureSession {
         return audioCaptureSession
     }()
 
-    lazy var videoCaptureSession: AVCaptureSession = {
+    private(set) public lazy var videoCaptureSession: AVCaptureSession = {
         let videoCaptureSession = AVCaptureSession()
         videoCaptureSession.automaticallyConfiguresApplicationAudioSession = false
 
@@ -96,7 +96,7 @@ public class CaptureSession {
     var audioSession = AVAudioSession.sharedInstance()
     
     public func prepare() throws {
-        
+        try initializeRecordingSession()
     }
     
     public func unprepare() {
@@ -125,6 +125,10 @@ public class CaptureSession {
     }
 
     public func startRecording() throws {
+        if currentRecordingSession?.state == .finished {
+            currentRecordingSession = nil
+        }
+
         if audioEnabled {
             if automaticallyConfiguresApplicationAudioSession {
                 if AVAudioSession.sharedInstance().isOtherAudioPlaying {

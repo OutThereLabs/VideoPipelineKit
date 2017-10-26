@@ -10,7 +10,7 @@ DEPENDENCIES:
 
 EXTERNAL SOURCES:
   VideoPipelineKit:
-    :path: "../"
+    :path: ../
 
 SPEC CHECKSUMS:
   VideoPipelineKit: 7e2a7cff2a2aeb56b80d4beb706b1498cf3d89bc
@@ -19,4 +19,4 @@ SPEC CHECKSUMS:
 
 PODFILE CHECKSUM: 369ffac51850d0ec15c74252bfc9254155135cd4
 
-COCOAPODS: 1.2.1
+COCOAPODS: 1.4.0.beta.1

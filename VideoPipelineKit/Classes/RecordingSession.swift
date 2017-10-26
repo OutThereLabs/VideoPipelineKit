@@ -53,7 +53,7 @@ public class RecordingSession: NSObject {
 
         self.captureOutputs = captureOutputs
 
-        movieFileOutput = try MovieFileOutput(outputURL: outputURL, size: renderPipeline.size, captureOutputs: captureOutputs.map { $0.1 })
+        movieFileOutput = try MovieFileOutput(outputURL: outputURL, renderPipeline: renderPipeline, captureOutputs: captureOutputs.map { $0.1 })
         state = .ready
 
         super.init()

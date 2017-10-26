@@ -51,6 +51,11 @@ class MovieFileOutput {
         return assetWriter.outputURL
     }
 
+    convenience init(outputURL: URL, renderPipeline: RenderPipeline, sourcePixelBufferAttributes: [String : Any]? = nil, captureOutputs: [AVCaptureOutput]) throws {
+        try self.init(outputURL: outputURL, size: renderPipeline.size, sourcePixelBufferAttributes: sourcePixelBufferAttributes, captureOutputs: captureOutputs)
+        self.renderPipeline = renderPipeline
+    }
+
     init(outputURL: URL, size: CGSize, sourcePixelBufferAttributes: [String : Any]? = nil, captureOutputs: [AVCaptureOutput]) throws {
         assetWriter = try AVAssetWriter(outputURL: outputURL, fileType: AVFileTypeQuickTimeMovie)
 
