@@ -182,6 +182,10 @@ public class RenderPipeline: NSObject {
 
 extension CGAffineTransform {
     static func aspectFill(from: CGRect, to: CGRect) -> CGAffineTransform {
+        if from.size == to.size {
+            return CGAffineTransform.identity
+        }
+
         let horizontalRatio = to.width / from .width
         let verticalRatio = to.height / from.height
         let scale = max(horizontalRatio, verticalRatio)

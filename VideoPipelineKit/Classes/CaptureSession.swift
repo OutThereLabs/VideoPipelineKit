@@ -8,6 +8,12 @@
 import AVKit
 
 public class CaptureSession {
+
+    public var photoFlashMode = AVCaptureDevice.FlashMode.auto {
+        didSet {
+            self.currentPhotoOutout?.flashMode = photoFlashMode
+        }
+    }
     
     public var audioEnabled = true
     
@@ -36,10 +42,50 @@ public class CaptureSession {
     let audioDeviceDiscoverySession = AVCaptureDevice.DiscoverySession(deviceTypes: [.builtInMicrophone], mediaType: AVMediaTypeAudio, position: .unspecified)
 
     let videoDeviceDiscoverySession = AVCaptureDevice.DiscoverySession(deviceTypes: [.builtInWideAngleCamera], mediaType: AVMediaTypeVideo, position: .unspecified)
+
+    var videoInputs: [AVCaptureDeviceInput] {
+        return videoCaptureSession.inputs.flatMap{ $0 as? AVCaptureDeviceInput }
+    }
     
-    public lazy var currentVideoDevice: AVCaptureDevice? = {
-        return self.videoDeviceDiscoverySession?.devices.first
-    }()
+    public var currentVideoDevice: AVCaptureDevice? {
+        get {
+            return videoInputs.filter { $0.device.hasMediaType(AVMediaTypeVideo) }.first?.device
+        }
+
+        set {
+            do {
+                if let currentVideoDeviceInput = videoInputs.first(where: { $0.device.hasMediaType(AVMediaTypeVideo) }) {
+                   try videoCaptureSession.removeInput(currentVideoDeviceInput)
+                }
+
+                if let currentVideoDevice = newValue {
+                    configure(videoDevice: currentVideoDevice)
+                    let currentVideoDeviceInput = try AVCaptureDeviceInput(device: currentVideoDevice)
+                    videoCaptureSession.addInput(currentVideoDeviceInput)
+                }
+            } catch {
+                print("Error adding camera: \(error)")
+            }
+        }
+    }
+
+    func configure(videoDevice: AVCaptureDevice) {
+        do {
+            try videoDevice.lockForConfiguration()
+            if videoDevice.isSmoothAutoFocusSupported {
+                videoDevice.isSmoothAutoFocusEnabled = true
+            }
+
+            if videoDevice.isLowLightBoostSupported {
+                videoDevice.automaticallyEnablesLowLightBoostWhenAvailable = true
+            }
+
+            videoDevice.isSubjectAreaChangeMonitoringEnabled = true
+            videoDevice.unlockForConfiguration()
+        } catch {
+            print("Couldn't configure new video device: \(error.localizedDescription)")
+        }
+    }
     
     public var videoDevices: [AVCaptureDevice] {
         return self.videoDeviceDiscoverySession?.devices ?? [AVCaptureDevice]()
@@ -65,9 +111,9 @@ public class CaptureSession {
         let videoCaptureSession = AVCaptureSession()
         videoCaptureSession.automaticallyConfiguresApplicationAudioSession = false
 
-        if let currentVideoDevice = self.currentVideoDevice {
+        if let firstVideoDevice = self.videoDeviceDiscoverySession?.devices.first {
             do {
-                let currentVideoDeviceInput = try AVCaptureDeviceInput(device: currentVideoDevice)
+                let currentVideoDeviceInput = try AVCaptureDeviceInput(device: firstVideoDevice)
                 videoCaptureSession.addInput(currentVideoDeviceInput)
             } catch {
                 print("Error adding camera: \(error)")
@@ -96,11 +142,29 @@ public class CaptureSession {
     var audioSession = AVAudioSession.sharedInstance()
     
     public func prepare() throws {
+        if let currentVideoDevice = currentVideoDevice {
+            configure(videoDevice: currentVideoDevice)
+        }
         try initializeRecordingSession()
+        try initializePhotoOutput()
     }
     
     public func unprepare() {
         
+    }
+
+    // MARK: - Photo Capture
+
+    var currentPhotoOutout: PhotoOutput?
+
+    func initializePhotoOutput() throws -> PhotoOutput {
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString + ".jpg")
+
+        let photoOutput = try PhotoOutput(captureSession: self.videoCaptureSession, renderPipeline: renderPipeline, outputURL: url)
+        photoOutput.flashMode = photoFlashMode
+
+        currentPhotoOutout = photoOutput
+        return photoOutput
     }
 
     // MARK: - Recording
@@ -110,6 +174,7 @@ public class CaptureSession {
     public var outputURL: URL? {
         return currentRecordingSession?.outputURL
     }
+
 
     func initializeRecordingSession() throws -> RecordingSession {
         currentRecordingSession?.cleanup()
@@ -163,6 +228,15 @@ public class CaptureSession {
                     print("Error switching audio: \(error)")
                 }
             }
+        }
+    }
+
+    public func takePhoto(completionHandler handler: @escaping (UIImage?, Error?) -> Void) {
+        do {
+            let photoOutput = try currentPhotoOutout ?? initializePhotoOutput()
+            photoOutput.takePhoto(completionHandler: handler)
+        } catch {
+            handler(nil, error)
         }
     }
 }

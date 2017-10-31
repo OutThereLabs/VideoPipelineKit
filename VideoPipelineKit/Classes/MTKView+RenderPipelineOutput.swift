@@ -23,7 +23,9 @@ extension MTKView: RenderPipelineVideoOutput {
             #else
                 let commandBuffer = commandQueue.makeCommandBuffer()
 
-                let scaledImage = image.applying(CGAffineTransform.aspectFill(from: image.extent, to: CGRect(origin: CGPoint.zero, size: drawableSize)))
+                let renderedImageRect = CGRect(origin: CGPoint.zero, size: image.extent.size)
+                let destinationRect = CGRect(origin: CGPoint.zero, size: drawableSize)
+                let scaledImage = image.applying(CGAffineTransform.aspectFill(from: renderedImageRect, to: destinationRect))
                 context.render(scaledImage, to: currentDrawable.texture, commandBuffer: commandBuffer, bounds: scaledImage.extent, colorSpace: CGColorSpaceCreateDeviceRGB())
                 commandBuffer.present(currentDrawable)
                 commandBuffer.commit()

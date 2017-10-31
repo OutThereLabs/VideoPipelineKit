@@ -30,7 +30,7 @@ public class RecordingSession: NSObject {
 
     let renderPipeline: RenderPipeline
 
-    public init(captureSessions: [AVCaptureSession], renderPipeline: RenderPipeline, outputURL: URL) throws {
+    public init(captureSessions: [AVCaptureSession], renderPipeline: RenderPipeline, outputURL: URL, metadata: [AVMetadataItem] = [AVMetadataItem]()) throws {
         self.captureSessions = captureSessions
         self.renderPipeline = renderPipeline
 
@@ -53,7 +53,7 @@ public class RecordingSession: NSObject {
 
         self.captureOutputs = captureOutputs
 
-        movieFileOutput = try MovieFileOutput(outputURL: outputURL, renderPipeline: renderPipeline, captureOutputs: captureOutputs.map { $0.1 })
+        movieFileOutput = try MovieFileOutput(outputURL: outputURL, renderPipeline: renderPipeline, captureOutputs: captureOutputs.map { $0.1 }, metadata: metadata)
         state = .ready
 
         super.init()
@@ -124,9 +124,12 @@ extension RecordingSession: AVCaptureVideoDataOutputSampleBufferDelegate, AVCapt
     }
 
     public func captureOutput(_ output: AVCaptureOutput!, didOutputSampleBuffer sampleBuffer: CMSampleBuffer!, from connection: AVCaptureConnection!) {
-        if state == .recording {
+        switch state {
+        case .ready, .recording:
             let processedSampleBuffer = renderPipeline.process(sampleBuffer: sampleBuffer)
             movieFileOutput.append(sampleBuffer: processedSampleBuffer, from: connection)
+        case .finishing, .finished:
+            break
         }
     }
 }

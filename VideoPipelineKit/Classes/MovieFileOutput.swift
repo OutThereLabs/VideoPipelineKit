@@ -43,7 +43,52 @@ enum MovieFileOutputAdapter {
 class MovieFileOutput {
     let assetWriter: AVAssetWriter
 
-    let adapters: [MovieFileOutputAdapter]
+    let captureOutputs: [AVCaptureOutput]
+
+    let size: CGSize
+
+    let sourcePixelBufferAttributes: [String: Any]?
+
+    var videoSourceFormatHint: CMFormatDescription?
+
+    lazy var adapters: [MovieFileOutputAdapter] = {
+        guard self.videoSourceFormatHint != nil else {
+            assertionFailure()
+            return [MovieFileOutputAdapter]()
+        }
+
+        let videoOutputSettings: [String: Any]? = [
+            AVVideoCodecKey: AVVideoCodecH264,
+            AVVideoHeightKey: self.size.height,
+            AVVideoWidthKey: self.size.width
+        ]
+
+        let audioOutputSettings: [String: Any]? = [
+            AVFormatIDKey: kAudioFormatMPEG4AAC,
+            AVSampleRateKey: 44100,
+            AVEncoderBitRateKey: 128000,
+            AVNumberOfChannelsKey: 2
+        ]
+
+        return self.captureOutputs.flatMap { captureOutput -> MovieFileOutputAdapter? in
+            if let audioCaptureOutput = captureOutput as? AVCaptureAudioDataOutput {
+                let assetWriterInput = AVAssetWriterInput(mediaType: AVMediaTypeAudio, outputSettings: audioOutputSettings)
+                assetWriterInput.expectsMediaDataInRealTime = true
+                return MovieFileOutputAdapter.audio(captureOutput: audioCaptureOutput, assetWriterInput: assetWriterInput)
+            }
+
+            if let videoCaptureOutput = captureOutput as? AVCaptureVideoDataOutput {
+                let assetWriterInput: AVAssetWriterInput
+                assetWriterInput = AVAssetWriterInput(mediaType: AVMediaTypeVideo, outputSettings: videoOutputSettings, sourceFormatHint: self.videoSourceFormatHint)
+                assetWriterInput.expectsMediaDataInRealTime = true
+
+                let pixelBufferAdapter = AVAssetWriterInputPixelBufferAdaptor(assetWriterInput: assetWriterInput, sourcePixelBufferAttributes: self.sourcePixelBufferAttributes)
+                return MovieFileOutputAdapter.video(captureOutput: videoCaptureOutput, assetWriterInput: assetWriterInput, pixelBufferAdapter: pixelBufferAdapter)
+            }
+
+            return nil
+        }
+    }()
 
     var renderPipeline: RenderPipeline?
 
@@ -51,36 +96,24 @@ class MovieFileOutput {
         return assetWriter.outputURL
     }
 
-    convenience init(outputURL: URL, renderPipeline: RenderPipeline, sourcePixelBufferAttributes: [String : Any]? = nil, captureOutputs: [AVCaptureOutput]) throws {
-        try self.init(outputURL: outputURL, size: renderPipeline.size, sourcePixelBufferAttributes: sourcePixelBufferAttributes, captureOutputs: captureOutputs)
+    convenience init(outputURL: URL, renderPipeline: RenderPipeline, sourcePixelBufferAttributes: [String : Any]? = nil, captureOutputs: [AVCaptureOutput], metadata: [AVMetadataItem]) throws {
+        try self.init(outputURL: outputURL, size: renderPipeline.size, sourcePixelBufferAttributes: sourcePixelBufferAttributes, captureOutputs: captureOutputs, metadata: metadata)
         self.renderPipeline = renderPipeline
     }
 
-    init(outputURL: URL, size: CGSize, sourcePixelBufferAttributes: [String : Any]? = nil, captureOutputs: [AVCaptureOutput]) throws {
-        assetWriter = try AVAssetWriter(outputURL: outputURL, fileType: AVFileTypeQuickTimeMovie)
+    init(outputURL: URL, size: CGSize, sourcePixelBufferAttributes: [String : Any]? = nil, captureOutputs: [AVCaptureOutput], metadata: [AVMetadataItem]) throws {
+        assetWriter = try AVAssetWriter(outputURL: outputURL, fileType: AVFileTypeMPEG4)
 
-        adapters = captureOutputs.flatMap { captureOutput -> MovieFileOutputAdapter? in
-            if let audioCaptureOutput = captureOutput as? AVCaptureAudioDataOutput {
-                let assetWriterInput = AVAssetWriterInput(mediaType: AVMediaTypeAudio, outputSettings: nil)
-                assetWriterInput.expectsMediaDataInRealTime = true
-                return MovieFileOutputAdapter.audio(captureOutput: audioCaptureOutput, assetWriterInput: assetWriterInput)
-            }
+        assetWriter.metadata = metadata
+        assetWriter.shouldOptimizeForNetworkUse = true
 
-            if let videoCaptureOutput = captureOutput as? AVCaptureVideoDataOutput {
-                let assetWriterInput: AVAssetWriterInput
-                if #available(iOS 11.0, *) {
-                    assetWriterInput = AVAssetWriterInput(mediaType: AVMediaTypeVideo, outputSettings: [AVVideoCodecKey: AVVideoCodecType.hevc, AVVideoHeightKey: size.height, AVVideoWidthKey: size.width])
-                } else {
-                    assetWriterInput = AVAssetWriterInput(mediaType: AVMediaTypeVideo, outputSettings: nil)
-                }
-                assetWriterInput.expectsMediaDataInRealTime = true
+        self.size = size
+        self.sourcePixelBufferAttributes = sourcePixelBufferAttributes
+        self.captureOutputs = captureOutputs
+    }
 
-                let pixelBufferAdapter = AVAssetWriterInputPixelBufferAdaptor(assetWriterInput: assetWriterInput, sourcePixelBufferAttributes: sourcePixelBufferAttributes)
-                return MovieFileOutputAdapter.video(captureOutput: videoCaptureOutput, assetWriterInput: assetWriterInput, pixelBufferAdapter: pixelBufferAdapter)
-            }
-
-            return nil
-        }
+    var isWriting: Bool {
+        return assetWriter.status == .writing
     }
 
     func startWriting(transform: CGAffineTransform) {
@@ -88,28 +121,47 @@ class MovieFileOutput {
             adapter.assetWriterInput.transform = transform
 
             guard assetWriter.canAdd(adapter.assetWriterInput) else {
+                assetWriter.add(adapter.assetWriterInput) // TODO: Remove
                 return assertionFailure()
             }
             assetWriter.add(adapter.assetWriterInput)
         }
 
         assetWriter.startWriting()
+
+        guard isWriting else {
+            return assertionFailure(assetWriter.error?.localizedDescription ?? "Unknown error")
+        }
+
+        if startTime != kCMTimeInvalid {
+            assetWriter.startSession(atSourceTime: startTime)
+        }
     }
 
     func finishWriting(completionHandler handler: @escaping () -> Swift.Void) {
-        assetWriter.finishWriting(completionHandler: handler)
-        startTime = kCMTimeInvalid
+        assetWriter.finishWriting {
+            self.startTime = kCMTimeInvalid
+            handler()
+        }
     }
 
     var startTime: CMTime = kCMTimeInvalid {
         didSet {
-            if oldValue == kCMTimeInvalid, startTime != kCMTimeInvalid {
+            if oldValue == kCMTimeInvalid, startTime != kCMTimeInvalid, isWriting {
                 assetWriter.startSession(atSourceTime: startTime)
             }
         }
     }
 
     func append(sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
+         if connection.output is AVCaptureVideoDataOutput, videoSourceFormatHint == nil {
+            self.videoSourceFormatHint = CMSampleBufferGetFormatDescription(sampleBuffer)
+        }
+
+        guard isWriting else {
+            return
+        }
+
         guard let adapter = adapters.first(where: { $0.captureOutput == connection.output }) else {
             return
         }

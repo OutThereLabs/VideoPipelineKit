@@ -68,6 +68,8 @@ public class PlayerItemPipelineDisplayLink {
             if videoOutput.hasNewPixelBuffer(forItemTime: time), let pixelBuffer = videoOutput.copyPixelBuffer(forItemTime: time, itemTimeForDisplay: nil) {
                 let image = CIImage(cvPixelBuffer: pixelBuffer).applying(preferredTrackTransform)
 
+                assert(image.extent.size == renderPipeline.size)
+
                 delegate?.willRender(image, through: renderPipeline)
                 renderPipeline.render(ciImage: image)
             }
