@@ -114,6 +114,20 @@ public class RecordingSession: NSObject {
     public func cleanup() {
         destroyRoutes()
     }
+
+    var lastSampledVideoBuffer: CMSampleBuffer?
+
+    public func snapshotOfLastVideoBuffer() -> UIImage? {
+        guard let lastSampledBuffer = lastSampledVideoBuffer, let cvPixelBuffer = CMSampleBufferGetImageBuffer(lastSampledBuffer) else { return nil }
+        let transform = movieFileOutput.transform ?? CGAffineTransform.identity
+        let ciImage = CIImage(cvPixelBuffer: cvPixelBuffer).applying(transform)
+
+        guard let cgImage = renderPipeline.imageContext.createCGImage(ciImage, from: ciImage.extent) else {
+            return nil
+        }
+        
+        return UIImage(cgImage: cgImage)
+    }
 }
 
 extension RecordingSession: AVCaptureVideoDataOutputSampleBufferDelegate, AVCaptureAudioDataOutputSampleBufferDelegate {
@@ -124,6 +138,10 @@ extension RecordingSession: AVCaptureVideoDataOutputSampleBufferDelegate, AVCapt
     }
 
     public func captureOutput(_ output: AVCaptureOutput!, didOutputSampleBuffer sampleBuffer: CMSampleBuffer!, from connection: AVCaptureConnection!) {
+        if output.connection(withMediaType: AVMediaTypeVideo) != nil {
+            lastSampledVideoBuffer = sampleBuffer
+        }
+
         switch state {
         case .ready, .recording:
             let processedSampleBuffer = renderPipeline.process(sampleBuffer: sampleBuffer)

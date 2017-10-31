@@ -116,7 +116,11 @@ class MovieFileOutput {
         return assetWriter.status == .writing
     }
 
+    private(set) var transform: CGAffineTransform?
+
     func startWriting(transform: CGAffineTransform) {
+        self.transform = transform
+
         for adapter in adapters {
             adapter.assetWriterInput.transform = transform
 

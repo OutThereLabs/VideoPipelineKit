@@ -231,6 +231,10 @@ public class CaptureSession {
         }
     }
 
+    public func snapshotOfLastVideoBuffer() -> UIImage? {
+        return currentRecordingSession?.snapshotOfLastVideoBuffer()
+    }
+
     public func takePhoto(completionHandler handler: @escaping (UIImage?, Error?) -> Void) {
         do {
             let photoOutput = try currentPhotoOutout ?? initializePhotoOutput()
