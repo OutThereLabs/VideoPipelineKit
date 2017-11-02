@@ -24,6 +24,9 @@ public class CaptureSession {
             guard isRunning != oldValue else { return }
 
             if isRunning {
+                if let firstVideoDevice = videoDevices.first, currentVideoDevice == nil {
+                    currentVideoDevice = firstVideoDevice
+                }
                 videoCaptureSession.startRunning()
             } else {
                 videoCaptureSession.stopRunning()
@@ -110,16 +113,6 @@ public class CaptureSession {
     private(set) public lazy var videoCaptureSession: AVCaptureSession = {
         let videoCaptureSession = AVCaptureSession()
         videoCaptureSession.automaticallyConfiguresApplicationAudioSession = false
-
-        if let firstVideoDevice = self.videoDeviceDiscoverySession?.devices.first {
-            do {
-                let currentVideoDeviceInput = try AVCaptureDeviceInput(device: firstVideoDevice)
-                videoCaptureSession.addInput(currentVideoDeviceInput)
-            } catch {
-                print("Error adding camera: \(error)")
-            }
-        }
-
         return videoCaptureSession
     }()
 
