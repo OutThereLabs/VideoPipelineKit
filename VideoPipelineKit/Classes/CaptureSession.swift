@@ -130,13 +130,13 @@ public class CaptureSession {
     }()
 
     var transform: CGAffineTransform {
-        var transform = CGAffineTransform.identity.rotated(by: -CGFloat.pi / 2)
+        var transform = CGAffineTransform.identity
 
-        if self.videoDeviceDiscoverySession?.devices.first?.position == .front {
-            transform = transform.scaledBy(x: -1, y: 0)
+        if currentVideoDevice?.position == .front {
+            transform = transform.scaledBy(x: -1, y: 1)
         }
 
-        return transform
+        return transform.rotated(by: -CGFloat.pi / 2)
     }
 
     var audioSession = AVAudioSession.sharedInstance()
