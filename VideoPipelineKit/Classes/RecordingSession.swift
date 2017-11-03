@@ -28,6 +28,16 @@ public class RecordingSession: NSObject {
         return movieFileOutput.outputURL
     }
 
+    public var mirrorVideo = false {
+        didSet {
+            let newValue = mirrorVideo
+            let output = movieFileOutput
+            sampleBufferQueue.async {
+                output.mirrorVideo = newValue
+            }
+        }
+    }
+
     let renderPipeline: RenderPipeline
 
     public init(captureSessions: [AVCaptureSession], renderPipeline: RenderPipeline, outputURL: URL, metadata: [AVMetadataItem] = [AVMetadataItem]()) throws {
@@ -82,6 +92,8 @@ public class RecordingSession: NSObject {
             } else {
                 assertionFailure()
             }
+
+            captureOutput.connection(withMediaType: AVMediaTypeVideo)?.automaticallyAdjustsVideoMirroring = true
         }
     }
 
@@ -117,9 +129,17 @@ public class RecordingSession: NSObject {
     var lastSampledVideoBuffer: CMSampleBuffer?
 
     public func snapshotOfLastVideoBuffer() -> UIImage? {
-        guard let lastSampledBuffer = lastSampledVideoBuffer, let cvPixelBuffer = CMSampleBufferGetImageBuffer(lastSampledBuffer) else { return nil }
-        let transform = movieFileOutput.transform ?? CGAffineTransform.identity
-        let ciImage = CIImage(cvPixelBuffer: cvPixelBuffer).applying(transform)
+        guard let lastSampledVideoBuffer = lastSampledVideoBuffer, let cvPixelBuffer = CMSampleBufferGetImageBuffer(lastSampledVideoBuffer) else { return nil }
+
+        var ciImage = CIImage(cvPixelBuffer: cvPixelBuffer)
+
+        if mirrorVideo {
+            ciImage = ciImage.applying(CGAffineTransform(scaleX: 1, y: -1).translatedBy(x: 0, y: -ciImage.extent.height))
+        }
+
+        if let transform = movieFileOutput.transform {
+            ciImage = ciImage.applying(transform)
+        }
 
         guard let cgImage = renderPipeline.imageContext.createCGImage(ciImage, from: ciImage.extent) else {
             return nil

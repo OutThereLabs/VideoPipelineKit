@@ -125,8 +125,8 @@ class MovieFileOutput {
             adapter.assetWriterInput.transform = transform
 
             guard assetWriter.canAdd(adapter.assetWriterInput) else {
-                assetWriter.add(adapter.assetWriterInput) // TODO: Remove
-                return assertionFailure()
+                assertionFailure()
+                break
             }
             assetWriter.add(adapter.assetWriterInput)
         }
@@ -156,6 +156,8 @@ class MovieFileOutput {
             }
         }
     }
+    
+    public var mirrorVideo = false
 
     func append(sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
          if connection.output is AVCaptureVideoDataOutput, videoSourceFormatHint == nil {
@@ -197,7 +199,12 @@ class MovieFileOutput {
                 return assertionFailure()
             }
 
-            let ciImage = CIImage(cvImageBuffer: imageBuffer)
+            var ciImage = CIImage(cvImageBuffer: imageBuffer)
+
+            if mirrorVideo {
+                ciImage = ciImage.applying(CGAffineTransform(scaleX: 1, y: -1).translatedBy(x: 0, y: -ciImage.extent.height))
+            }
+
             self.append(image: ciImage, from: connection, imageContext: imageContext, time: time, pixelBufferAdapter: pixelBufferAdapter, to: assetWriterInput)
         }
     }

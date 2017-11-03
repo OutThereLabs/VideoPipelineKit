@@ -62,7 +62,12 @@ public class CaptureSession {
                     configure(videoDevice: currentVideoDevice)
                     let currentVideoDeviceInput = try AVCaptureDeviceInput(device: currentVideoDevice)
                     videoCaptureSession.addInput(currentVideoDeviceInput)
+
+                    if let currentRecordingSession = currentRecordingSession {
+                        currentRecordingSession.mirrorVideo = currentVideoDevice.position == .front
+                    }
                 }
+
             } catch {
                 print("Error adding camera: \(error)")
             }
@@ -121,11 +126,6 @@ public class CaptureSession {
 
     var transform: CGAffineTransform {
         var transform = CGAffineTransform.identity
-
-        if currentVideoDevice?.position == .front {
-            transform = transform.scaledBy(x: -1, y: 1)
-        }
-
         return transform.rotated(by: -CGFloat.pi / 2)
     }
 
@@ -177,6 +177,11 @@ public class CaptureSession {
 
         let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString + ".mov")
         let recordingSession = try RecordingSession(captureSessions: [self.audioCaptureSession, self.videoCaptureSession], renderPipeline: renderPipeline, outputURL: url)
+
+        if let currentVideoDevice = currentVideoDevice {
+            recordingSession.movieFileOutput.mirrorVideo = currentVideoDevice.position == .front
+        }
+
         currentRecordingSession = recordingSession
         return recordingSession
     }
