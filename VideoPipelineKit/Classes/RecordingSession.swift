@@ -80,7 +80,6 @@ public class RecordingSession: NSObject {
             if captureSession.canAddOutput(captureOutput) {
                 captureSession.addOutput(captureOutput)
             } else {
-                captureSession.addOutput(captureOutput)
                 assertionFailure()
             }
         }

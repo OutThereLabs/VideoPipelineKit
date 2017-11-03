@@ -24,9 +24,6 @@ public class CaptureSession {
             guard isRunning != oldValue else { return }
 
             if isRunning {
-                if let firstVideoDevice = videoDevices.first, currentVideoDevice == nil {
-                    currentVideoDevice = firstVideoDevice
-                }
                 videoCaptureSession.startRunning()
             } else {
                 videoCaptureSession.stopRunning()
@@ -135,15 +132,16 @@ public class CaptureSession {
     var audioSession = AVAudioSession.sharedInstance()
     
     public func prepare() throws {
-        if let currentVideoDevice = currentVideoDevice {
-            configure(videoDevice: currentVideoDevice)
+        if let currentVideoDevice = currentVideoDevice ?? videoDevices.first {
+            self.currentVideoDevice = currentVideoDevice
         }
+
         try initializeRecordingSession()
         try initializePhotoOutput()
     }
     
     public func unprepare() {
-        
+
     }
 
     // MARK: - Photo Capture
@@ -162,7 +160,12 @@ public class CaptureSession {
 
     // MARK: - Recording
 
-    var currentRecordingSession: RecordingSession?
+    var currentRecordingSession: RecordingSession? {
+        didSet {
+            oldValue?.cleanup()
+        }
+    }
+
 
     public var outputURL: URL? {
         return currentRecordingSession?.outputURL
@@ -170,7 +173,7 @@ public class CaptureSession {
 
 
     func initializeRecordingSession() throws -> RecordingSession {
-        currentRecordingSession?.cleanup()
+        currentRecordingSession = nil
 
         let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString + ".mov")
         let recordingSession = try RecordingSession(captureSessions: [self.audioCaptureSession, self.videoCaptureSession], renderPipeline: renderPipeline, outputURL: url)
@@ -183,8 +186,8 @@ public class CaptureSession {
     }
 
     public func startRecording() throws {
-        if currentRecordingSession?.state == .finished {
-            currentRecordingSession = nil
+        if let currentRecordingSession = currentRecordingSession, currentRecordingSession.state == .finished {
+            self.currentRecordingSession = nil
         }
 
         if audioEnabled {
@@ -206,9 +209,12 @@ public class CaptureSession {
 
     public func stopRecording(completionHandler handler: @escaping () -> Swift.Void) {
         if let recordingSession = currentRecordingSession {
-            recordingSession.finish(completionHandler: handler)
+            recordingSession.finish {
+                handler()
+                _ = try? self.initializeRecordingSession()
+            }
         }
-        
+
         if audioEnabled {
             audioCaptureSession.stopRunning()
             
