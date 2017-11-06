@@ -11,8 +11,10 @@ class PhotoOutput: NSObject, AVCapturePhotoCaptureDelegate {
     let capturePhotoOutput = AVCapturePhotoOutput()
 
     let outputURL: URL
+    let renderPipeline: RenderPipeline
 
     public init(captureSession: AVCaptureSession, renderPipeline: RenderPipeline, outputURL: URL) throws {
+        self.renderPipeline = renderPipeline
         self.outputURL = outputURL
 
         if captureSession.canAddOutput(capturePhotoOutput) {
@@ -34,6 +36,9 @@ class PhotoOutput: NSObject, AVCapturePhotoCaptureDelegate {
 
     public func takePhoto(completionHandler handler: @escaping (UIImage?, Error?) -> Void) {
         self.handler = handler
+        if let connection = capturePhotoOutput.connection(withMediaType: AVMediaTypeVideo), connection.isVideoMirroringSupported {
+            connection.isVideoMirrored = renderPipeline.mirrorVideo
+        }
         capturePhotoOutput.capturePhoto(with: settings, delegate: self)
     }
 
