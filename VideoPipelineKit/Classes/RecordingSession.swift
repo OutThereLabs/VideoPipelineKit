@@ -97,12 +97,12 @@ public class RecordingSession: NSObject {
         }
     }
 
-    public func start(transform: CGAffineTransform) {
+    public func start(orientationTransform: CGAffineTransform) {
         guard state == .ready else {
             return assertionFailure()
         }
 
-        movieFileOutput.startWriting(transform: transform)
+        movieFileOutput.startWriting(orientationTransform: orientationTransform)
         state = .recording
     }
 
@@ -131,17 +131,11 @@ public class RecordingSession: NSObject {
     public func snapshotOfLastVideoBuffer() -> UIImage? {
         guard let lastSampledVideoBuffer = lastSampledVideoBuffer, let cvPixelBuffer = CMSampleBufferGetImageBuffer(lastSampledVideoBuffer) else { return nil }
 
-        var ciImage = CIImage(cvPixelBuffer: cvPixelBuffer)
+        let ciImage = CIImage(cvPixelBuffer: cvPixelBuffer)
 
-        if mirrorVideo {
-            ciImage = ciImage.applying(CGAffineTransform(scaleX: 1, y: -1).translatedBy(x: 0, y: -ciImage.extent.height))
-        }
+        let renderedImage = movieFileOutput.renderPipeline.rendererdImage(image: ciImage)
 
-        if let transform = movieFileOutput.transform {
-            ciImage = ciImage.applying(transform)
-        }
-
-        guard let cgImage = renderPipeline.imageContext.createCGImage(ciImage, from: ciImage.extent) else {
+        guard let cgImage = renderPipeline.imageContext.createCGImage(renderedImage, from: renderedImage.extent) else {
             return nil
         }
         

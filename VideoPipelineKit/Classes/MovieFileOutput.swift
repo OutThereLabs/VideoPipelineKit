@@ -79,7 +79,7 @@ class MovieFileOutput {
 
             if let videoCaptureOutput = captureOutput as? AVCaptureVideoDataOutput {
                 let assetWriterInput: AVAssetWriterInput
-                assetWriterInput = AVAssetWriterInput(mediaType: AVMediaTypeVideo, outputSettings: videoOutputSettings, sourceFormatHint: self.videoSourceFormatHint)
+                assetWriterInput = AVAssetWriterInput(mediaType: AVMediaTypeVideo, outputSettings: videoOutputSettings, sourceFormatHint: nil)
                 assetWriterInput.expectsMediaDataInRealTime = true
 
                 let pixelBufferAdapter = AVAssetWriterInputPixelBufferAdaptor(assetWriterInput: assetWriterInput, sourcePixelBufferAttributes: self.sourcePixelBufferAttributes)
@@ -90,7 +90,7 @@ class MovieFileOutput {
         }
     }()
 
-    var renderPipeline: RenderPipeline?
+    var renderPipeline: RenderPipeline
 
     public var outputURL: URL {
         return assetWriter.outputURL
@@ -110,20 +110,17 @@ class MovieFileOutput {
         self.size = size
         self.sourcePixelBufferAttributes = sourcePixelBufferAttributes
         self.captureOutputs = captureOutputs
+        self.renderPipeline = RenderPipeline(config: RenderPipeline.Config.defaultConfig, size: size)
     }
 
     var isWriting: Bool {
         return assetWriter.status == .writing
     }
 
-    private(set) var transform: CGAffineTransform?
-
-    func startWriting(transform: CGAffineTransform) {
-        self.transform = transform
+    func startWriting(orientationTransform: CGAffineTransform) {
+        renderPipeline.orientationTransform = orientationTransform
 
         for adapter in adapters {
-            adapter.assetWriterInput.transform = transform
-
             guard assetWriter.canAdd(adapter.assetWriterInput) else {
                 assertionFailure()
                 break
@@ -157,7 +154,15 @@ class MovieFileOutput {
         }
     }
     
-    public var mirrorVideo = false
+    public var mirrorVideo: Bool {
+        get {
+            return renderPipeline.mirrorVideo
+        }
+
+        set {
+            renderPipeline.mirrorVideo = newValue
+        }
+    }
 
     func append(sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
          if connection.output is AVCaptureVideoDataOutput, videoSourceFormatHint == nil {
@@ -190,26 +195,16 @@ class MovieFileOutput {
                 return
             }
 
-            guard let imageContext = renderPipeline?.imageContext else {
-                assetWriterInput.append(sampleBuffer)
-                return
-            }
-
             guard let imageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else {
                 return assertionFailure()
             }
 
             var ciImage = CIImage(cvImageBuffer: imageBuffer)
-
-            if mirrorVideo {
-                ciImage = ciImage.applying(CGAffineTransform(scaleX: 1, y: -1).translatedBy(x: 0, y: -ciImage.extent.height))
-            }
-
-            self.append(image: ciImage, from: connection, imageContext: imageContext, time: time, pixelBufferAdapter: pixelBufferAdapter, to: assetWriterInput)
+            self.append(image: ciImage, from: connection, time: time, pixelBufferAdapter: pixelBufferAdapter, to: assetWriterInput)
         }
     }
 
-    func append(image: CIImage, from connection: AVCaptureConnection, imageContext: CIContext, time: CMTime, pixelBufferAdapter: AVAssetWriterInputPixelBufferAdaptor, to assetWriterInput: AVAssetWriterInput) {
+    func append(image: CIImage, from connection: AVCaptureConnection, time: CMTime, pixelBufferAdapter: AVAssetWriterInputPixelBufferAdaptor, to assetWriterInput: AVAssetWriterInput) {
         guard let pixelBufferPool = pixelBufferAdapter.pixelBufferPool else {
             return assertionFailure()
         }
@@ -221,7 +216,7 @@ class MovieFileOutput {
         }
 
         if let pixelBuffer = pixelBuffer {
-            imageContext.render(image, to: pixelBuffer)
+            renderPipeline.render(image: image, to: pixelBuffer)
             pixelBufferAdapter.append(pixelBuffer, withPresentationTime: time)
         } else {
             return assertionFailure()

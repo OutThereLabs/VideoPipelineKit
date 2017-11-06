@@ -103,8 +103,14 @@ public class RenderPipeline: NSObject {
 
     public var filters = [CIFilter]()
 
+    public var orientationTransform = CGAffineTransform.identity
+
+    public var mirrorVideo = false
+
     func rendererdImage(image: CIImage) -> CIImage {
-        return self.filters.reduce(image) { (lastImage, filter) -> CIImage in
+        let transformedImage = image.applying(orientationTransform: orientationTransform, mirrored: mirrorVideo)
+
+        let filteredImage = self.filters.reduce(transformedImage) { (lastImage, filter) -> CIImage in
             filter.setValue(lastImage, forKey: kCIInputImageKey)
             guard let outputImage = filter.outputImage else {
                 assertionFailure()
@@ -112,6 +118,10 @@ public class RenderPipeline: NSObject {
             }
             return outputImage
         }
+
+        assert(filteredImage.extent.size == self.size)
+
+        return filteredImage
     }
 
     public func process(sampleBuffer: CMSampleBuffer) -> CMSampleBuffer {
@@ -165,6 +175,11 @@ public class RenderPipeline: NSObject {
         forwardToOutputs(image: renderedImage)
     }
 
+    public func render(image: CIImage, to pixelBuffer: CVPixelBuffer) {
+        let renderedImage = rendererdImage(image: image)
+        imageContext.render(renderedImage, to: pixelBuffer)
+    }
+
     func forwardToOutputs(image: CIImage) {
         for videoOutput in videoOutputs {
             videoOutput.render(image: image, context: imageContext, pipeline: self)
@@ -177,6 +192,26 @@ public class RenderPipeline: NSObject {
 
     public func add(videoOutput: RenderPipelineVideoOutput) {
         videoOutputs.append(videoOutput)
+    }
+}
+
+extension CIImage {
+    func applying(orientationTransform: CGAffineTransform?, mirrored: Bool) -> CIImage {
+        var result = self
+
+        if let transform = orientationTransform {
+            result = result.applying(transform)
+        }
+
+        if mirrored {
+            let transform = CGAffineTransform(scaleX: -1, y: 1)
+            result = result.applying(transform)
+        }
+
+        let originTransform = CGAffineTransform(translationX: -result.extent.origin.x, y: -result.extent.origin.y)
+        result = result.applying(originTransform)
+
+        return result
     }
 }
 

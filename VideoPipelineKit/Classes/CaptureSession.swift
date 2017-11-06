@@ -124,7 +124,7 @@ public class CaptureSession {
         return previewLayer
     }()
 
-    var transform: CGAffineTransform {
+    var orientationTransform: CGAffineTransform {
         var transform = CGAffineTransform.identity
         return transform.rotated(by: -CGFloat.pi / 2)
     }
@@ -179,7 +179,7 @@ public class CaptureSession {
         let recordingSession = try RecordingSession(captureSessions: [self.audioCaptureSession, self.videoCaptureSession], renderPipeline: renderPipeline, outputURL: url)
 
         if let currentVideoDevice = currentVideoDevice {
-            recordingSession.movieFileOutput.mirrorVideo = currentVideoDevice.position == .front
+            recordingSession.mirrorVideo = currentVideoDevice.position == .front
         }
 
         currentRecordingSession = recordingSession
@@ -209,7 +209,7 @@ public class CaptureSession {
         }
 
         let recordingSession = try currentRecordingSession ?? initializeRecordingSession()
-        recordingSession.start(transform: transform)
+        recordingSession.start(orientationTransform: orientationTransform)
     }
 
     public func stopRecording(completionHandler handler: @escaping () -> Swift.Void) {
