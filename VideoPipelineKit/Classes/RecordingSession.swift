@@ -92,8 +92,22 @@ public class RecordingSession: NSObject {
             } else {
                 assertionFailure()
             }
+        }
 
-            captureOutput.connection(withMediaType: AVMediaTypeVideo)?.automaticallyAdjustsVideoMirroring = true
+        configureConnections()
+    }
+
+    func configureConnections() {
+        for (_, captureOutput) in captureOutputs {
+            if let connection = captureOutput.connection(withMediaType: AVMediaTypeVideo) {
+                if connection.isVideoMirroringSupported {
+                    connection.automaticallyAdjustsVideoMirroring = true
+                }
+
+                if connection.isVideoStabilizationSupported {
+                    connection.preferredVideoStabilizationMode = .auto
+                }
+            }
         }
     }
 

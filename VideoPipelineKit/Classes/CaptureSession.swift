@@ -65,6 +65,7 @@ public class CaptureSession {
 
                     if let currentRecordingSession = currentRecordingSession {
                         currentRecordingSession.mirrorVideo = currentVideoDevice.position == .front
+                        currentRecordingSession.configureConnections()
                     }
                 }
 
