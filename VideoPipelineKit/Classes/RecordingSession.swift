@@ -87,25 +87,27 @@ public class RecordingSession: NSObject {
                 assertionFailure()
             }
 
+            captureSession.beginConfiguration()
             if captureSession.canAddOutput(captureOutput) {
                 captureSession.addOutput(captureOutput)
             } else {
                 assertionFailure()
             }
+            configureConnections(captureSession: captureSession)
+            captureSession.commitConfiguration()
         }
 
-        configureConnections()
     }
 
-    func configureConnections() {
-        for (_, captureOutput) in captureOutputs {
+    func configureConnections(captureSession: AVCaptureSession) {
+        for (captureSession, captureOutput) in captureOutputs {
             if let connection = captureOutput.connection(withMediaType: AVMediaTypeVideo) {
                 if connection.isVideoMirroringSupported {
                     connection.automaticallyAdjustsVideoMirroring = true
                 }
 
                 if connection.isVideoStabilizationSupported {
-                    connection.preferredVideoStabilizationMode = .auto
+                    connection.preferredVideoStabilizationMode = .standard
                 }
             }
         }

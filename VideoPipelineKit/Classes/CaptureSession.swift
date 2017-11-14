@@ -53,6 +53,7 @@ public class CaptureSession {
         }
 
         set {
+            videoCaptureSession.beginConfiguration()
             do {
                 if let currentVideoDeviceInput = videoInputs.first(where: { $0.device.hasMediaType(AVMediaTypeVideo) }) {
                    try videoCaptureSession.removeInput(currentVideoDeviceInput)
@@ -60,18 +61,19 @@ public class CaptureSession {
 
                 if let currentVideoDevice = newValue {
                     configure(videoDevice: currentVideoDevice)
+
                     let currentVideoDeviceInput = try AVCaptureDeviceInput(device: currentVideoDevice)
                     videoCaptureSession.addInput(currentVideoDeviceInput)
 
                     if let currentRecordingSession = currentRecordingSession {
                         currentRecordingSession.mirrorVideo = currentVideoDevice.position == .front
-                        currentRecordingSession.configureConnections()
+                        currentRecordingSession.configureConnections(captureSession: videoCaptureSession)
                     }
                 }
-
             } catch {
                 print("Error adding camera: \(error)")
             }
+            videoCaptureSession.commitConfiguration()
         }
     }
 
