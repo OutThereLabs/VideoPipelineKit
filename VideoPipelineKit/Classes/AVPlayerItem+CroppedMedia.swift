@@ -30,13 +30,13 @@ extension AVPlayerItem {
 
         for assetTrack in assetTracks {
             let compositionTrack = composition.addMutableTrack(withMediaType: assetTrack.mediaType, preferredTrackID: kCMPersistentTrackID_Invalid)
-            try compositionTrack.insertTimeRange(assetTrack.timeRange, of: assetTrack, at: kCMTimeZero)
+            try compositionTrack?.insertTimeRange(assetTrack.timeRange, of: assetTrack, at: kCMTimeZero)
         }
 
         self.init(asset: composition)
 
         guard let firstVideoAsset = assets.first(where: {asset in
-            return asset.tracks(withMediaType:AVMediaTypeVideo).count > 0
+            return asset.tracks(withMediaType:AVMediaType.video).count > 0
         }) else {
             return
         }

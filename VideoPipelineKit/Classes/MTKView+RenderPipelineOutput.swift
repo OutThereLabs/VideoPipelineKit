@@ -21,11 +21,12 @@ extension MTKView: RenderPipelineVideoOutput {
             #if arch(i386) || arch(x86_64)
                 assertionFailure("Can't use MTKView as a render pipeline output on a Simulator, it doesn't support metal.")
             #else
-                let commandBuffer = commandQueue.makeCommandBuffer()
-
+                guard let commandBuffer = commandQueue.makeCommandBuffer() else {
+                    return
+                }
                 let renderedImageRect = CGRect(origin: CGPoint.zero, size: image.extent.size)
                 let destinationRect = CGRect(origin: CGPoint.zero, size: drawableSize)
-                let scaledImage = image.applying(CGAffineTransform.aspectFill(from: renderedImageRect, to: destinationRect))
+                let scaledImage = image.transformed(by: CGAffineTransform.aspectFill(from: renderedImageRect, to: destinationRect))
                 context.render(scaledImage, to: currentDrawable.texture, commandBuffer: commandBuffer, bounds: scaledImage.extent, colorSpace: CGColorSpaceCreateDeviceRGB())
                 commandBuffer.present(currentDrawable)
                 commandBuffer.commit()

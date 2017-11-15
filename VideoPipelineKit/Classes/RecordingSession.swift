@@ -49,10 +49,10 @@ public class RecordingSession: NSObject {
 
             return allMediaTypes.flatMap { mediaType -> (AVCaptureSession, AVCaptureOutput)? in
                 switch mediaType {
-                case AVMediaTypeAudio:
+                case .audio:
                     let output = AVCaptureAudioDataOutput()
                     return (captureSession, output)
-                case AVMediaTypeVideo:
+                case .video:
                     let output = AVCaptureVideoDataOutput()
                     return (captureSession, output)
                 default:
@@ -100,8 +100,8 @@ public class RecordingSession: NSObject {
     }
 
     func configureConnections(captureSession: AVCaptureSession) {
-        for (captureSession, captureOutput) in captureOutputs {
-            if let connection = captureOutput.connection(withMediaType: AVMediaTypeVideo) {
+        for (_, captureOutput) in captureOutputs {
+            if let connection = captureOutput.connection(with: .video) {
                 if connection.isVideoMirroringSupported {
                     connection.automaticallyAdjustsVideoMirroring = true
                 }
@@ -162,12 +162,12 @@ public class RecordingSession: NSObject {
 extension RecordingSession: AVCaptureVideoDataOutputSampleBufferDelegate, AVCaptureAudioDataOutputSampleBufferDelegate {
 
     // MARK: - AVCaptureVideoDataOutputSampleBufferDelegate
-    public func captureOutput(_ output: AVCaptureOutput!, didDrop sampleBuffer: CMSampleBuffer!, from connection: AVCaptureConnection!) {
+    public func captureOutput(_ output: AVCaptureOutput, didDrop sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
 
     }
 
     public func captureOutput(_ output: AVCaptureOutput!, didOutputSampleBuffer sampleBuffer: CMSampleBuffer!, from connection: AVCaptureConnection!) {
-        if output.connection(withMediaType: AVMediaTypeVideo) != nil {
+        if output.connection(with: .video) != nil {
             lastSampledVideoBuffer = sampleBuffer
         }
 

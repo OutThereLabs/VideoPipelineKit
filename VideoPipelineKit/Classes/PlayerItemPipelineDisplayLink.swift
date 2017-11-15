@@ -12,7 +12,7 @@ public extension AVPlayerItem {
         let output = AVPlayerItemVideoOutput(pixelBufferAttributes: [kCVPixelBufferPixelFormatTypeKey as String: renderPipeline.pixelBufferPixelFormatType])
         add(output)
 
-        let preferredTrackTransform = asset.tracks(withMediaType: AVMediaTypeVideo).first?.preferredTransform ?? CGAffineTransform.identity
+        let preferredTrackTransform = asset.tracks(withMediaType: AVMediaType.video).first?.preferredTransform ?? CGAffineTransform.identity
 
         return PlayerItemPipelineDisplayLink(videoOutput: output, preferredTrackTransform: preferredTrackTransform, renderPipeline: renderPipeline)
     }
@@ -22,7 +22,8 @@ public protocol PlayerItemPipelineDisplayLinkDelegate: class {
     func willRender(_ image: CIImage, through pipeline: RenderPipeline)
 }
 
-public class PlayerItemPipelineDisplayLink {
+@objcMembers
+public class PlayerItemPipelineDisplayLink: NSObject {
     var displayLink: CADisplayLink?
 
     public weak var delegate: PlayerItemPipelineDisplayLinkDelegate?
@@ -60,13 +61,13 @@ public class PlayerItemPipelineDisplayLink {
         }
     }
 
-    @objc func displayLinkFired(_ displayLink: CADisplayLink) {
+    func displayLinkFired(_ displayLink: CADisplayLink) {
         let nextFrameTime = displayLink.timestamp
         let time = videoOutput.itemTime(forHostTime: nextFrameTime)
 
         autoreleasepool {
             if videoOutput.hasNewPixelBuffer(forItemTime: time), let pixelBuffer = videoOutput.copyPixelBuffer(forItemTime: time, itemTimeForDisplay: nil) {
-                let image = CIImage(cvPixelBuffer: pixelBuffer).applying(preferredTrackTransform)
+                let image = CIImage(cvPixelBuffer: pixelBuffer).transformed(by: preferredTrackTransform)
 
                 assert(image.extent.size == renderPipeline.size)
 

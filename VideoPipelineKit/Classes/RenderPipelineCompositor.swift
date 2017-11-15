@@ -95,7 +95,7 @@ public class RenderPipelineCompositor: NSObject, AVVideoCompositing {
 
         let backgroundColor = CIColor(cgColor: videoCompositionInstruction.backgroundColor ?? UIColor.clear.cgColor)
         let contextExtent = CGRect(origin: CGPoint.zero, size: asyncVideoCompositionRequest.renderContext.size)
-        let backgroundImage = CIImage(color: backgroundColor).cropping(to: contextExtent)
+        let backgroundImage = CIImage(color: backgroundColor).cropped(to: contextExtent)
 
         let composedImage = videoCompositionInstruction.layerInstructions.reduce(backgroundImage, { (composedImage, instruction) -> CIImage in
             guard let layerImageBuffer = asyncVideoCompositionRequest.sourceFrame(byTrackID: instruction.trackID) else {
@@ -108,22 +108,22 @@ public class RenderPipelineCompositor: NSObject, AVVideoCompositing {
 
             var cropRectangle = layerImage.extent
             if instruction.getCropRectangleRamp(for: asyncVideoCompositionRequest.compositionTime, startCropRectangle: &cropRectangle, endCropRectangle: nil, timeRange: nil) {
-                layerImage = layerImage.cropping(to: cropRectangle)
+                layerImage = layerImage.cropped(to: cropRectangle)
             }
 
             var transform = CGAffineTransform.identity
             if instruction.getTransformRamp(for: asyncVideoCompositionRequest.compositionTime, start: &transform, end: nil, timeRange: nil) {
-                layerImage = layerImage.applying(transform)
+                layerImage = layerImage.transformed(by: transform)
             }
 
             guard let instruction = instruction as? RenderPipelineLayerInstruction else {
-                return layerImage.compositingOverImage(composedImage)
+                return layerImage.composited(over: composedImage)
             }
 
             var postTransformCropRectangle = layerImage.extent
             if instruction.getPostTransformCropRectangleRamp(for: asyncVideoCompositionRequest.compositionTime, startCropRectangle: &postTransformCropRectangle, endCropRectangle: nil, timeRange: nil) {
                 let postTransformCropTranslation = CGAffineTransform(translationX: -postTransformCropRectangle.origin.x, y: -postTransformCropRectangle.origin.y)
-                layerImage = layerImage.cropping(to: postTransformCropRectangle).applying(postTransformCropTranslation)
+                layerImage = layerImage.cropped(to: postTransformCropRectangle).transformed(by: postTransformCropTranslation)
             }
 
             if let renderPipeline = instruction.renderPipeline {
@@ -135,10 +135,10 @@ public class RenderPipelineCompositor: NSObject, AVVideoCompositing {
                 print("Pipeline rendered a frame in \(duration) seconds")
             }
 
-            return layerImage.compositingOverImage(composedImage)
+            return layerImage.composited(over: composedImage)
         })
 
-        let transformedImage = composedImage.applying(asyncVideoCompositionRequest.renderContext.renderTransform)
+        let transformedImage = composedImage.transformed(by: asyncVideoCompositionRequest.renderContext.renderTransform)
 
         imageContext.render(transformedImage, to: pixelBuffer)
         asyncVideoCompositionRequest.finish(withComposedVideoFrame: pixelBuffer)

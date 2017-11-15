@@ -39,9 +39,9 @@ public class CaptureSession {
 
     // MARK: - Capture
 
-    let audioDeviceDiscoverySession = AVCaptureDevice.DiscoverySession(deviceTypes: [.builtInMicrophone], mediaType: AVMediaTypeAudio, position: .unspecified)
+    let audioDeviceDiscoverySession = AVCaptureDevice.DiscoverySession(deviceTypes: [.builtInMicrophone], mediaType: AVMediaType.audio, position: .unspecified)
 
-    let videoDeviceDiscoverySession = AVCaptureDevice.DiscoverySession(deviceTypes: [.builtInWideAngleCamera], mediaType: AVMediaTypeVideo, position: .unspecified)
+    let videoDeviceDiscoverySession = AVCaptureDevice.DiscoverySession(deviceTypes: [.builtInWideAngleCamera], mediaType: AVMediaType.video, position: .unspecified)
 
     var videoInputs: [AVCaptureDeviceInput] {
         return videoCaptureSession.inputs.flatMap{ $0 as? AVCaptureDeviceInput }
@@ -49,14 +49,14 @@ public class CaptureSession {
     
     public var currentVideoDevice: AVCaptureDevice? {
         get {
-            return videoInputs.filter { $0.device.hasMediaType(AVMediaTypeVideo) }.first?.device
+            return videoInputs.filter { $0.device.hasMediaType(AVMediaType.video) }.first?.device
         }
 
         set {
             videoCaptureSession.beginConfiguration()
             do {
-                if let currentVideoDeviceInput = videoInputs.first(where: { $0.device.hasMediaType(AVMediaTypeVideo) }) {
-                   try videoCaptureSession.removeInput(currentVideoDeviceInput)
+                if let currentVideoDeviceInput = videoInputs.first(where: { $0.device.hasMediaType(AVMediaType.video) }) {
+                   videoCaptureSession.removeInput(currentVideoDeviceInput)
                 }
 
                 if let currentVideoDevice = newValue {
@@ -96,14 +96,14 @@ public class CaptureSession {
     }
     
     public var videoDevices: [AVCaptureDevice] {
-        return self.videoDeviceDiscoverySession?.devices ?? [AVCaptureDevice]()
+        return self.videoDeviceDiscoverySession.devices
     }
 
     lazy var audioCaptureSession: AVCaptureSession = {
         let audioCaptureSession = AVCaptureSession()
         audioCaptureSession.automaticallyConfiguresApplicationAudioSession = false
 
-        if let builtInMicrophone = self.audioDeviceDiscoverySession?.devices.first {
+        if let builtInMicrophone = self.audioDeviceDiscoverySession.devices.first {
             do {
                 let builtInMicrophoneInput = try AVCaptureDeviceInput(device: builtInMicrophone)
                 audioCaptureSession.addInput(builtInMicrophoneInput)
@@ -123,12 +123,12 @@ public class CaptureSession {
 
     public lazy var previewLayer: AVCaptureVideoPreviewLayer? = {
         let previewLayer = AVCaptureVideoPreviewLayer(session: self.videoCaptureSession)
-        previewLayer?.videoGravity = AVLayerVideoGravityResizeAspectFill
+        previewLayer.videoGravity = AVLayerVideoGravity.resizeAspectFill
         return previewLayer
     }()
 
     var orientationTransform: CGAffineTransform {
-        var transform = CGAffineTransform.identity
+        let transform = CGAffineTransform.identity
         return transform.rotated(by: -CGFloat.pi / 2)
     }
 
@@ -139,8 +139,8 @@ public class CaptureSession {
             self.currentVideoDevice = currentVideoDevice
         }
 
-        try initializeRecordingSession()
-        try initializePhotoOutput()
+        _ = try initializeRecordingSession()
+        _ = try initializePhotoOutput()
     }
     
     public func unprepare() {
@@ -190,7 +190,7 @@ public class CaptureSession {
     }
     
     public var isRecording: Bool {
-        return (currentRecordingSession?.state == .recording) ?? false
+        return (currentRecordingSession?.state == .recording)
     }
 
     public func startRecording() throws {

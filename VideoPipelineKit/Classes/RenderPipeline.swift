@@ -94,7 +94,7 @@ public class RenderPipeline: NSObject {
 
         let overlayCIImage = CIImage(cgImage: overlay)
         let overlayScaleTransform = CGAffineTransform.aspectFill(from: overlayCIImage.extent, to: fullSizeRect)
-        let scaledOverlay = overlayCIImage.applying(overlayScaleTransform)
+        let scaledOverlay = overlayCIImage.transformed(by: overlayScaleTransform)
         self.cachedScaledOverlay = scaledOverlay
         return scaledOverlay
     }
@@ -164,12 +164,12 @@ public class RenderPipeline: NSObject {
 
         let preferredSize = CGRect(origin: CGPoint.zero, size: size)
         let scaleTransform = CGAffineTransform.aspectFill(from: image.extent, to: preferredSize)
-        let scaledImage = image.applying(scaleTransform)
+        let scaledImage = image.transformed(by: scaleTransform)
 
         var renderedImage = rendererdImage(image: scaledImage)
 
         if let scaledOverlay = scaledOverlay {
-            renderedImage = scaledOverlay.compositingOverImage(renderedImage)
+            renderedImage = scaledOverlay.composited(over: renderedImage)
         }
 
         forwardToOutputs(image: renderedImage)
@@ -200,16 +200,16 @@ extension CIImage {
         var result = self
 
         if let transform = orientationTransform {
-            result = result.applying(transform)
+            result = result.transformed(by: transform)
         }
 
         if mirrored {
             let transform = CGAffineTransform(scaleX: -1, y: 1)
-            result = result.applying(transform)
+            result = result.transformed(by: transform)
         }
 
         let originTransform = CGAffineTransform(translationX: -result.extent.origin.x, y: -result.extent.origin.y)
-        result = result.applying(originTransform)
+        result = result.transformed(by: originTransform)
 
         return result
     }

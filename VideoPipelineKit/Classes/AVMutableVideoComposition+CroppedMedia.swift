@@ -15,7 +15,7 @@ public extension AVMutableVideoComposition {
 
 
         for assetTrack in asset.tracks {
-            if assetTrack.mediaType == AVMediaTypeVideo {
+            if assetTrack.mediaType == AVMediaType.video {
                 renderSize = assetTrack.naturalSize.applying(assetTrack.preferredTransform)
 
                 let cropInstruction = self.cropInstruction(for: assetTrack, croppedTo: cropRectangle, filter: filter, overlay: overlay, duration: assetTrack.timeRange.duration)

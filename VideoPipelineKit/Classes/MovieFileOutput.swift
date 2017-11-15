@@ -72,14 +72,14 @@ class MovieFileOutput {
 
         return self.captureOutputs.flatMap { captureOutput -> MovieFileOutputAdapter? in
             if let audioCaptureOutput = captureOutput as? AVCaptureAudioDataOutput {
-                let assetWriterInput = AVAssetWriterInput(mediaType: AVMediaTypeAudio, outputSettings: audioOutputSettings)
+                let assetWriterInput = AVAssetWriterInput(mediaType: AVMediaType.audio, outputSettings: audioOutputSettings)
                 assetWriterInput.expectsMediaDataInRealTime = true
                 return MovieFileOutputAdapter.audio(captureOutput: audioCaptureOutput, assetWriterInput: assetWriterInput)
             }
 
             if let videoCaptureOutput = captureOutput as? AVCaptureVideoDataOutput {
                 let assetWriterInput: AVAssetWriterInput
-                assetWriterInput = AVAssetWriterInput(mediaType: AVMediaTypeVideo, outputSettings: videoOutputSettings, sourceFormatHint: nil)
+                assetWriterInput = AVAssetWriterInput(mediaType: AVMediaType.video, outputSettings: videoOutputSettings, sourceFormatHint: nil)
                 assetWriterInput.expectsMediaDataInRealTime = true
 
                 let pixelBufferAdapter = AVAssetWriterInputPixelBufferAdaptor(assetWriterInput: assetWriterInput, sourcePixelBufferAttributes: self.sourcePixelBufferAttributes)
@@ -102,7 +102,7 @@ class MovieFileOutput {
     }
 
     init(outputURL: URL, size: CGSize, sourcePixelBufferAttributes: [String : Any]? = nil, captureOutputs: [AVCaptureOutput], metadata: [AVMetadataItem]) throws {
-        assetWriter = try AVAssetWriter(outputURL: outputURL, fileType: AVFileTypeMPEG4)
+        assetWriter = try AVAssetWriter(outputURL: outputURL, fileType: AVFileType.mp4)
 
         assetWriter.metadata = metadata
         assetWriter.shouldOptimizeForNetworkUse = true
@@ -199,7 +199,7 @@ class MovieFileOutput {
                 return assertionFailure()
             }
 
-            var ciImage = CIImage(cvImageBuffer: imageBuffer)
+            let ciImage = CIImage(cvImageBuffer: imageBuffer)
             self.append(image: ciImage, from: connection, time: time, pixelBufferAdapter: pixelBufferAdapter, to: assetWriterInput)
         }
     }

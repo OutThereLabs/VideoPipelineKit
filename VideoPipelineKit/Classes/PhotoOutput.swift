@@ -36,7 +36,7 @@ class PhotoOutput: NSObject, AVCapturePhotoCaptureDelegate {
 
     public func takePhoto(completionHandler handler: @escaping (UIImage?, Error?) -> Void) {
         self.handler = handler
-        if let connection = capturePhotoOutput.connection(withMediaType: AVMediaTypeVideo), connection.isVideoMirroringSupported {
+        if let connection = capturePhotoOutput.connection(with: AVMediaType.video), connection.isVideoMirroringSupported {
             connection.isVideoMirrored = renderPipeline.mirrorVideo
         }
         capturePhotoOutput.capturePhoto(with: settings, delegate: self)
@@ -48,7 +48,7 @@ class PhotoOutput: NSObject, AVCapturePhotoCaptureDelegate {
     }
 
     func handleCapture(sampleBuffer: CMSampleBuffer) {
-        guard let jpegData = AVCaptureStillImageOutput.jpegStillImageNSDataRepresentation(sampleBuffer) else {
+        guard let jpegData = AVCapturePhotoOutput.jpegPhotoDataRepresentation(forJPEGSampleBuffer: sampleBuffer, previewPhotoSampleBuffer: nil) else {
             let error = NSError(domain: "com.outtherelabs.videopipelinekit", code: 500, userInfo: [NSLocalizedDescriptionKey: "Could not create photo from captured data."])
             handler?(nil, error)
             return
@@ -59,7 +59,7 @@ class PhotoOutput: NSObject, AVCapturePhotoCaptureDelegate {
 
     // MARK: AVCapturePhotoCaptureDelegate
 
-    func capture(_ output: AVCapturePhotoOutput, didFinishProcessingPhotoSampleBuffer photoSampleBuffer: CMSampleBuffer?, previewPhotoSampleBuffer: CMSampleBuffer?, resolvedSettings: AVCaptureResolvedPhotoSettings, bracketSettings: AVCaptureBracketedStillImageSettings?, error: Error?) {
+    func photoOutput(_ output: AVCapturePhotoOutput, didFinishProcessingPhoto photoSampleBuffer: CMSampleBuffer?, previewPhoto previewPhotoSampleBuffer: CMSampleBuffer?, resolvedSettings: AVCaptureResolvedPhotoSettings, bracketSettings: AVCaptureBracketedStillImageSettings?, error: Error?) {
         if let photoSampleBuffer = photoSampleBuffer {
             handleCapture(sampleBuffer: photoSampleBuffer)
         } else if let error = error {

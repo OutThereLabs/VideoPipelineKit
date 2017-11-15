@@ -18,7 +18,7 @@ This framework builds a SnapChat like video pipeline for rendering filters.
   s.homepage         = 'https://github.com/OutThereLabs/VideoPipelineKit'
   s.license          = { :type => 'MIT', :file => 'LICENSE' }
   s.author           = { 'pat2man' => 'pat2man@gmail.com' }
-  s.source           = { :git => 'https://github.com/pat2man/VideoPipelineKit.git', :tag => s.version.to_s }
+  s.source           = { :git => 'https://github.com/OutThereLabs/VideoPipelineKit.git', :tag => s.version.to_s }
   s.social_media_url = 'https://twitter.com/pat2man'
 
   s.ios.deployment_target = '10.0'

@@ -68,9 +68,9 @@ public class PercentCropFilter: CIFilter {
         secondCropRect.size.width = secondCropWidth
         secondCropRect.origin.x = (inputImage.extent.width - secondCropWidth)
 
-        let croppedSecondFilterImage = secondFilteredImage.cropping(to: secondCropRect)
+        let croppedSecondFilterImage = secondFilteredImage.cropped(to: secondCropRect)
 
-        let combinedImage = croppedSecondFilterImage.compositingOverImage(firstFilteredImage)
+        let combinedImage = croppedSecondFilterImage.composited(over: firstFilteredImage)
 
         return combinedImage
     }
