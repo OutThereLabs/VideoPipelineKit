@@ -166,7 +166,7 @@ extension RecordingSession: AVCaptureVideoDataOutputSampleBufferDelegate, AVCapt
 
     }
 
-    public func captureOutput(_ output: AVCaptureOutput!, didOutputSampleBuffer sampleBuffer: CMSampleBuffer!, from connection: AVCaptureConnection!) {
+    public func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
         if output.connection(with: .video) != nil {
             lastSampledVideoBuffer = sampleBuffer
         }
